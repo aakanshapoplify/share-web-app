@@ -1,3 +1,5 @@
+
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -39,4 +41,25 @@ a {
   html {
     color-scheme: dark;
   }
+}
+.main{
+  display: grid;
+  justify-content: center;
+}
+.body_layout{
+      min-height: 600px;
+      max-height: auto;
+      border: 1px solid #8080808f;
+      padding: 0px 25px;
+      margin: 25px 0;
+      border-radius: 20px;
+      min-width: 550px;
+      max-width: 550px;
+      background: #d3d3d34f;
+}
+@media only screen and  (min-width: 340px)  and (max-width: 540px) {
+  .body_layout{
+    min-width: inherit;
+    max-width: inherit;
+}
 }

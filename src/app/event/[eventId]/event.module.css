@@ -1,0 +1,72 @@
+.image {
+    position: relative !important; 
+    width: 100%;
+    min-width: 100%;
+    height: auto;
+    border-radius: 30px;
+    object-fit: cover;
+  }
+  .eventBody {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 10px !important;
+  }
+  .card_start {
+    max-width: 100% !important;
+    min-width: 100% !important;
+    background-color: #f6f4f4 !important;
+  }
+  .event_detail {
+    padding: 10px 10px !important;
+    display: flex !important;
+    justify-content: center !important;
+  }  
+  .profilePic {
+    width: 55px;
+    height: 55px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+  .card_description {
+    font-family: Montserrat;
+    width: 400px;
+    text-align: start;
+  }
+  .event_name {
+    font-weight: 600;
+  }
+  .card_body {
+    color: black !important;
+  }
+  .seeMoreLess {
+    font-size: 12px !important;
+    color: #007bff; 
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    margin-top: -22px;
+    margin-left: -14px;
+  }
+  
+  .seeMoreLess:hover {
+    text-decoration: underline;
+  }
+  .menu_btn {
+    width: 460px;
+  }
+  .eventBody {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 10px ;
+  }
+  .qr_code {
+    display: block;
+    margin: 0px auto;
+    max-width: 200px;
+    width: 100%;
+    padding-bottom: 20px;
+    padding-top: 10px;
+  }

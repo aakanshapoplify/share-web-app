@@ -3,6 +3,8 @@
 import "./globals.css";
 import Header from "../components/Header";
 import { ApolloClient, ApolloProvider, InMemoryCache } from "@apollo/client";
+import 'bootstrap/dist/css/bootstrap.min.css';
+
 
 const GRAPHQL_AUTH_HEADER = process.env.NEXT_PUBLIC_GRAPHQL_AUTH_HEADER ?? "";
 const GRAPHQL_HOST = process.env.NEXT_PUBLIC_GRAPHQL_HOST ?? "";
@@ -46,11 +48,14 @@ export default function RootLayout({
         ></script>
       </head>
       <body>
-        <div id="root" className="h-full w-screen">
+        <div id="root" className="main">
           <ApolloProvider client={client}>
+            <div className="body_layout">
             <Header></Header>
             {children}
+            </div>
           </ApolloProvider>
+          
         </div>
       </body>
     </html>
