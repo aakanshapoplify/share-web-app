@@ -1,42 +1,90 @@
 "use client";
 
+import { useState } from "react";
 import { useParams } from "next/navigation";
 import { useQuery } from "@apollo/client";
-import { GET_EVENT } from "../../../../graphql/event.graphql";
+import {
+  GET_EVENT,
+  GET_EVENT_DETAILS,
+} from "../../../../graphql/event.graphql";
 import Loading from "@/components/Loading";
 import classNames from "classnames";
 import classes from "./eventDetails.module.css";
-import QRCode from "qrcode";
-import { useEffect, useState } from "react";
+import moment from "moment";
+import TicketList from "@/components/TicketList";
 
-const SHARE_DOMAIN = process.env.NEXT_PUBLIC_SHARE_DOMAIN ?? "";
-
-export default function EventPage() {
+export default function EventDetail() {
   const { eventId } = useParams();
-  const { data, loading } = useQuery(GET_EVENT, {
+  const { data: eventData, loading: eventLoading } = useQuery(GET_EVENT, {
     variables: { event_id: eventId },
   });
 
-  const [qrcode, setQrcode] = useState<string | null>(null);
-  const [expanded, setExpanded] = useState(false);
-
-  useEffect(() => {
-    if (eventId) {
-      QRCode.toDataURL(`${SHARE_DOMAIN}/event/${eventId}/buy`)
-        .then(setQrcode)
-        .catch(console.error); // Catch any errors
+  const { data: ticketData, loading: ticketLoading } = useQuery(
+    GET_EVENT_DETAILS,
+    {
+      variables: { event_id: eventId },
     }
-  }, [eventId]);
+  );
 
-  // Check if event data is available
-  const event = data?.eventDetail;
-  if (!event || loading) return <Loading />;
+  const event = eventData?.eventDetail;
+  const tickets = ticketData?.eventTicketsStep1;
 
-  // Function to check if description is longer than two lines
-  const isDescriptionLong = event.description?.length > 200; // Adjust limit as needed
+  // Store form data in state
+  const [formData, setFormData] = useState({ name: "", email: "" });
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const emailRegex = /^\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/;
+  const [showTickets, setShowTickets] = useState(false);
+
+
+
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = event.target;
+
+    if (name === "name" && /\d/.test(value)) return;
+
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
+
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      [name]: validateField(name, value),
+    }));
+  };
+
+  const validateField = (name: string, value: string): string => {
+    if (!value.trim())
+      return `${name.charAt(0).toUpperCase() + name.slice(1)} is required`;
+    if (name === "email" && !emailRegex.test(value))
+      return "Invalid email format";
+    return "";
+  };
+
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    const newErrors: { [key: string]: string } = {};
+    Object.keys(formData).forEach((key) => {
+      const errorMessage = validateField(
+        key,
+        formData[key as keyof typeof formData]
+      );
+      if (errorMessage) newErrors[key] = errorMessage;
+    });
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+    setShowTickets(true);
+  };
+  const handleTickets=(data:any)=>{
+    console.log(data,"====")
+  }
+  if (eventLoading || ticketLoading) return <Loading />;
 
   return (
-    <div className="container text-center mb-4">
+    <div className="container mb-4">
       <div className="row">
         <div className="col-md-12">
           <img
@@ -48,102 +96,88 @@ export default function EventPage() {
         <div className={classNames("col-md-12", classes.eventBody)}>
           <div className={classNames("card", classes.card_start)}>
             <div
-              className={classNames(
-                classes.card_body,
-                classes.event_detail,
-                "card-body"
-              )}
+              className={classNames(classes.card_body, classes.ticket_detail)}
             >
               <div>
-                <img
-                  alt={event.organiser.name}
-                  className={classes.profilePic}
-                  src={event.organiser.profile_picture}
-                />
+                <i className="bi bi-ticket-fill"></i>
+                <small className={classes.icon}>
+                  Ticket price:
+                  <small className={classes.card_title}>{event.price}</small>
+                </small>
               </div>
-              <div className={classNames(classes.card_description, "ms-3")}>
-                <h5 className={classes.event_name}>{event.name}</h5>
-                <p className={classes.card_text}>
-                  <span
-                    id="eventDescription"
-                    dangerouslySetInnerHTML={{
-                      __html:
-                        expanded || !isDescriptionLong
-                          ? event.description.replace(/\n/g, "<br />")
-                          : `${event.description
-                              .slice(0, 200)
-                              .replace(/\n/g, "<br />")}...`,
-                    }}
+
+              <small>
+                <i className="bi bi-clock"></i>
+                <small className={classes.icon}>
+                  {moment(event.start_time).format("DD/MM/YYYY")}
+                </small>
+              </small>
+            </div>
+            <small className={classes.address}>
+              <i className="bi bi-geo-alt-fill"></i>
+              <a className={classNames(classes.icon, classes.address_link)}>
+                {event.location.address}
+              </a>
+            </small>
+          </div>
+        </div>
+        {!showTickets && (
+          <div className={classNames(classes.user_details, "mt-4")}>
+            <h5 className={classes.event_name}>Enter your details:</h5>
+            <form>
+              <div className={classNames(classes.card_start, "card", "p-3")}>
+                <div className="form-group mb-3">
+                  <input
+                    type="text"
+                    name="name"
+                    id="name"
+                    className={`form-control ${
+                      errors.name ? "is-invalid" : ""
+                    }`}
+                    placeholder="Enter your name"
+                    autoComplete="off"
+                    value={formData.name}
+                    onChange={(e) => handleChange(e)}
                   />
-                </p>
-                {isDescriptionLong && (
+                  {errors.name && (
+                    <div className="text-danger">{errors.name}</div>
+                  )}
+                </div>
+
+                <div className="form-group mb-3">
+                  <input
+                    type="email"
+                    name="email"
+                    id="email"
+                    className={`form-control ${
+                      errors.email ? "is-invalid" : ""
+                    }`}
+                    placeholder="Enter your email"
+                    autoComplete="off"
+                    value={formData.email}
+                    onChange={(e) => handleChange(e)}
+                  />
+                  {errors.email && (
+                    <div className="text-danger">{errors.email}</div>
+                  )}
+                </div>
+                <div className="col-12 mt-2 mt-sm-0">
                   <button
-                    onClick={() => setExpanded(!expanded)}
-                    className={classNames(
-                      classes.seeMoreLess,
-                      classes.btn_link,
-                      "btn"
-                    )}
+                    type="submit"
+                    className={classNames("btn btn-dark", classes.menu_btn)}
+                    onClick={(e) => handleSubmit(e)}
                   >
-                    {expanded ? "See Less" : "See More"}
+                    Get Tickets
                   </button>
-                )}
+                </div>
               </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="justify-content-sm-center mt-2">
-          <div className="col-12 mt-sm-0 mb-1">
-            {event?.waitlist_count > 0 ? (
-              <a
-                className={classNames(
-                  "btn btn-dark download-link",
-                  classes.menu_btn
-                )}
-                id="buyTicket"
-                href="#"
-              >
-                Download the app to join the waitlist
-              </a>
-            ) : (
-              <a
-                className={classNames("btn btn-dark", classes.menu_btn)}
-                id="buyTicket"
-                href={`${eventId}/buy`}
-              >
-                Buy tickets online!
-              </a>
-            )}
-          </div>
-          <div className="col-12 mt-2 mt-sm-0">
-            <a
-              className={classNames("btn btn-dark", classes.menu_btn)}
-              href={`cliq://events/${eventId}`}
-            >
-              Open in app
-            </a>
-          </div>
-        </div>
-
-        {qrcode && (
-          <div className={classNames("col-md-12 ", classes.eventBody)}>
-            <div className={classNames("card ", classes.card_start)}>
-              <div className="mt-3">
-                <h5 className={classNames("m-0", classes.event_name)}>
-                  Scan to join
-                </h5>
-                <img
-                  className={classes.qr_code}
-                  src={qrcode}
-                  alt="Event QR Code"
-                />
-              </div>
-            </div>
+            </form>
           </div>
         )}
+        {/* {showTickets && ( */}
+        <TicketList tickets={tickets} event={event} handleTickets={handleTickets}/>
+        {/* )} */}
       </div>
     </div>
   );
 }
-

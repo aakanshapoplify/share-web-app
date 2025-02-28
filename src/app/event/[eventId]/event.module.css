@@ -1,26 +1,20 @@
 .image {
-    position: relative !important; 
+    position: relative; 
     width: 100%;
     min-width: 100%;
     height: auto;
     border-radius: 30px;
     object-fit: cover;
   }
-  .eventBody {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-top: 10px !important;
-  }
   .card_start {
-    max-width: 100% !important;
-    min-width: 100% !important;
-    background-color: #f6f4f4 !important;
+    max-width: 100%;
+    min-width: 100%;
+    background-color: #f6f4f4;
   }
   .event_detail {
-    padding: 10px 10px !important;
-    display: flex !important;
-    justify-content: center !important;
+    padding: 10px 10px;
+    display: flex;
+    justify-content: center;
   }  
   .profilePic {
     width: 55px;
@@ -29,7 +23,6 @@
     object-fit: cover;
   }
   .card_description {
-    font-family: Montserrat;
     width: 400px;
     text-align: start;
   }
@@ -37,10 +30,9 @@
     font-weight: 600;
   }
   .card_body {
-    color: black !important;
+    color: black;
   }
   .seeMoreLess {
-    font-size: 12px !important;
     color: #007bff; 
     background: none;
     border: none;
@@ -70,3 +62,9 @@
     padding-bottom: 20px;
     padding-top: 10px;
   }
+  .card-btn {
+    position: relative;
+    margin: 10px 7px;
+    border: 1px solid #cccfd2;
+  }
+  

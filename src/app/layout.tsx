@@ -4,6 +4,12 @@ import "./globals.css";
 import Header from "../components/Header";
 import { ApolloClient, ApolloProvider, InMemoryCache } from "@apollo/client";
 import 'bootstrap/dist/css/bootstrap.min.css';
+import "bootstrap-icons/font/bootstrap-icons.css";
+import { ThemeProvider } from "@mui/material/styles";
+import theme from "@/theme";
+import CssBaseline from "@mui/material/CssBaseline";
+
+
 
 
 const GRAPHQL_AUTH_HEADER = process.env.NEXT_PUBLIC_GRAPHQL_AUTH_HEADER ?? "";
@@ -50,10 +56,13 @@ export default function RootLayout({
       <body>
         <div id="root" className="main">
           <ApolloProvider client={client}>
+          <ThemeProvider theme={theme}>
+          <CssBaseline />
             <div className="body_layout">
             <Header></Header>
             {children}
             </div>
+            </ThemeProvider>
           </ApolloProvider>
           
         </div>

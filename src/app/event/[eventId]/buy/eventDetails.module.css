@@ -1,5 +1,5 @@
 .image {
-    position: relative !important; 
+    position: relative; 
     width: 100%;
     min-width: 100%;
     height: auto;
@@ -10,63 +10,46 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-top: 10px !important;
+    margin-top: 10px;
   }
   .card_start {
-    max-width: 100% !important;
-    min-width: 100% !important;
-    background-color: #f6f4f4 !important;
+    max-width: 100%;
+    min-width: 100%;
+    background-color: #f6f4f4;
   }
-  .event_detail {
-    padding: 10px 10px !important;
-    display: flex !important;
-    justify-content: center !important;
-  }  
-  .profilePic {
-    width: 55px;
-    height: 55px;
-    border-radius: 50%;
-    object-fit: cover;
+ 
+  .card_body {
+    color: black;
   }
-  .card_description {
-    font-family: Montserrat;
-    width: 400px;
+  .ticket_detail {
+    align-items: center;
+    padding: 6px 10px ;
+    display: flex;
+    justify-content: space-between;
+    column-gap: 70px;
+  }
+  .icon {
+    margin-left: 5px;
+  }
+  .card_title span {
+    font-weight: bold;
+  }
+  .address {
     text-align: start;
+    padding-left: 10px;
+    margin-bottom: 6px;
+  }
+  .address_link {
+    color: black;
   }
   .event_name {
     font-weight: 600;
   }
-  .card_body {
-    color: black !important;
-  }
-  .seeMoreLess {
-    font-size: 12px !important;
-    color: #007bff; 
-    background: none;
-    border: none;
-    padding: 0;
-    cursor: pointer;
-    margin-top: -22px;
-    margin-left: -14px;
-  }
-  
-  .seeMoreLess:hover {
-    text-decoration: underline;
+  .user_details {
+    display: grid;
+    /* justify-content: center; */
+    align-items: start;
   }
   .menu_btn {
     width: 460px;
-  }
-  .eventBody {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-top: 10px ;
-  }
-  .qr_code {
-    display: block;
-    margin: 0px auto;
-    max-width: 200px;
-    width: 100%;
-    padding-bottom: 20px;
-    padding-top: 10px;
   }

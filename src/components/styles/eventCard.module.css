@@ -74,3 +74,42 @@
   .wrapper svg {
     color: var(--brand-primary-violet);
   }
+  .user_details {
+    display: grid;
+    /* justify-content: center; */
+    align-items: start;
+  }
+  .menu_btn {
+    width: 460px;
+  }
+  .tickets {
+    display: grid;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+  }
+  .desc_card {
+    font-size: 12px !important;
+    width: 95% !important;
+  }
+  .cards_btn {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .button {
+    display: flex;
+    align-items: center;
+    
+  }
+  .decorator{
+    text-decoration: none;
+    color: red;
+  }
+  .quantity_display {
+    font-size: 20px;
+    font-weight: bold;
+  }
+  .spacing{
+    padding: 20px;
+  }
