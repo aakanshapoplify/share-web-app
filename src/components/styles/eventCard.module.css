@@ -1,115 +1,129 @@
 .logo {
-    border-radius: 100%;
-    width: 50px;
-    height: 50px;
-    background-color: #cbbbec;
-    object-fit: cover;
-  }
-  .logo_menu {
-    min-width: 460px !important;
-    max-width: 460px !important;
-    margin-top: 0px;
-    margin-bottom: 0px;
-    padding-top: 10px;
-      padding-bottom: 10px;
-  }
+  border-radius: 100%;
+  width: 50px;
+  height: 50px;
+  background-color: #cbbbec;
+  object-fit: cover;
+}
+.logo_menu {
+  min-width: 460px !important;
+  max-width: 460px !important;
+  margin-top: 0px;
+  margin-bottom: 0px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
 
-  .logo_btn {
-    border: 1px solid #cccfd2 !important;
-    border-radius: 10px !important;
-    padding: 7px 18px !important;
-    font-weight: 400 !important;
-  
-  
-  }
-  .logo_header {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    column-gap: 28px;
-  }
-  .headerLogo{
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
- .logo_a{
-    color: var(--background);
-    text-decoration: none;
-  }
-  .btn_container{
-    display: flex;
-    flex-wrap: wrap; 
-    gap: 8px; 
-    margin-left: 5px 
-    
-  }
-  .btn-container a {
-    flex: 1 1 auto; 
-    min-width: 150px; 
-  }
+.logo_btn {
+  border: 1px solid #cccfd2 !important;
+  border-radius: 10px !important;
+  padding: 7px 18px !important;
+  font-weight: 400 !important;
+}
+.logo_header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  column-gap: 28px;
+}
+.headerLogo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.logo_a {
+  color: var(--background);
+  text-decoration: none;
+}
+.btn_container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-left: 5px;
+}
+.btn-container a {
+  flex: 1 1 auto;
+  min-width: 150px;
+}
 
-  @media only screen and  (min-width: 340px)  and (max-width: 540px) {
-    .headerLogo{
-      display: ruby-text;
-      margin-top: 30px;
-      margin-bottom: 20px;
-    }
-    .btn-container {
-      flex-direction: column;
-      align-items: center;
-      margin-bottom: 10px;
-      margin-left: 10px;
-    }
+@media only screen and (min-width: 340px) and (max-width: 540px) {
+  .headerLogo {
+    display: ruby-text;
+    margin-top: 30px;
+    margin-bottom: 20px;
   }
-
-  .wrapper {
-    align-items: center;
-    display: flex;
-    height: 100%;
-    justify-content: center;
-    width: 100%;
-  }
-  
-  .wrapper svg {
-    color: var(--brand-primary-violet);
-  }
-  .user_details {
-    display: grid;
-    /* justify-content: center; */
-    align-items: start;
-  }
-  .menu_btn {
-    width: 460px;
-  }
-  .tickets {
-    display: grid;
-    justify-content: center;
+  .btn-container {
     flex-direction: column;
     align-items: center;
+    margin-bottom: 10px;
+    margin-left: 10px;
   }
-  .desc_card {
-    font-size: 12px !important;
-    width: 95% !important;
-  }
-  .cards_btn {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .button {
-    display: flex;
-    align-items: center;
-    
-  }
-  .decorator{
-    text-decoration: none;
-    color: red;
-  }
-  .quantity_display {
-    font-size: 20px;
-    font-weight: bold;
-  }
-  .spacing{
-    padding: 20px;
-  }
+}
+
+.wrapper {
+  align-items: center;
+  display: flex;
+  height: 100%;
+  justify-content: center;
+  width: 100%;
+}
+
+.wrapper svg {
+  color: var(--brand-primary-violet);
+}
+.user_details {
+  display: grid;
+  /* justify-content: center; */
+  align-items: start;
+}
+.menu_btn {
+  width: 460px;
+}
+.tickets {
+  display: grid;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+}
+.desc_card {
+  font-size: 12px !important;
+  width: 95% !important;
+}
+.cards_btn {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.button {
+  display: flex;
+  align-items: center;
+}
+.decorator {
+  text-decoration: none;
+  color: red;
+}
+.quantity_display {
+  font-size: 20px;
+  font-weight: bold;
+}
+.spacing {
+  padding: 20px;
+}
+.disableBtn {
+  opacity: 0.5;
+}
+.input_form {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+.input_filed {
+  width: 80%;
+}
+.btn_apply {
+  cursor: pointer;
+  background: gainsboro !important;
+  color: black !important;
+  border: 1px solid #80808000 !important;
+}

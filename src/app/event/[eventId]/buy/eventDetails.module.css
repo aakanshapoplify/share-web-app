@@ -53,3 +53,12 @@
   .menu_btn {
     width: 460px;
   }
+  .ul_decorator ul {
+    list-style-type: none;
+  }
+  .checkbox {
+      cursor: pointer;
+      border: initial;
+      margin-right: 15PX;
+      color: white !important;
+}

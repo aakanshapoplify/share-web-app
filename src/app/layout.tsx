@@ -8,6 +8,9 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 import { ThemeProvider } from "@mui/material/styles";
 import theme from "@/theme";
 import CssBaseline from "@mui/material/CssBaseline";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css"; 
+
 
 
 
@@ -58,6 +61,7 @@ export default function RootLayout({
           <ApolloProvider client={client}>
           <ThemeProvider theme={theme}>
           <CssBaseline />
+          <ToastContainer />
             <div className="body_layout">
             <Header></Header>
             {children}

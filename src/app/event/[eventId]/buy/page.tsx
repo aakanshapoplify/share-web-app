@@ -1,20 +1,41 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { useQuery } from "@apollo/client";
+import { useQuery, useLazyQuery } from "@apollo/client";
 import {
   GET_EVENT,
   GET_EVENT_DETAILS,
+  ACTIONS_UPDATES,
 } from "../../../../graphql/event.graphql";
+
 import Loading from "@/components/Loading";
 import classNames from "classnames";
 import classes from "./eventDetails.module.css";
 import moment from "moment";
 import TicketList from "@/components/TicketList";
+import { toast } from "react-toastify";
+import PromCode from "@/components/Promocode";
+import { useRouter } from "next/navigation";
 
 export default function EventDetail() {
+  const router = useRouter();
   const { eventId } = useParams();
+  const [fetchTickets] = useLazyQuery(ACTIONS_UPDATES);
+  const [allTicketData, setAllTicketData] = useState<any>([]);
+  const [formData, setFormData] = useState({ name: "", email: "" });
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const emailRegex = /^\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/;
+  const [showTickets, setShowTickets] = useState(false);
+  const [selectedTicketData, setSelectedTicketData] = useState<any>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [promocode, setPromocode] = useState("");
+  const [data, setData] = useState<any>();
+  const [processed, setProceed] = useState(true);
+  const [selectedTicketTerms, setSelectedTicketTerms] = useState<string[]>([]);
+  const [acceptedTerms, setAcceptedTerms] = useState<string[]>([]);
+  const [type,setType] = useState("");
+
   const { data: eventData, loading: eventLoading } = useQuery(GET_EVENT, {
     variables: { event_id: eventId },
   });
@@ -29,13 +50,11 @@ export default function EventDetail() {
   const event = eventData?.eventDetail;
   const tickets = ticketData?.eventTicketsStep1;
 
-  // Store form data in state
-  const [formData, setFormData] = useState({ name: "", email: "" });
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const emailRegex = /^\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/;
-  const [showTickets, setShowTickets] = useState(false);
-
-
+  useEffect(() => {
+    if (tickets) {
+      setAllTicketData(tickets);
+    }
+  }, [tickets]);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
@@ -78,9 +97,90 @@ export default function EventDetail() {
     }
     setShowTickets(true);
   };
-  const handleTickets=(data:any)=>{
-    console.log(data,"====")
+  const handleData = async (data: any, type: string) => {
+    console.log(data, "data");
+    setType(type)
+    type === "ticket"
+      ? setSelectedTicketData(data)
+      : type === "promocode"
+      ? setPromocode(data)
+      : "";
+  };
+
+  useEffect(() => {
+    if (selectedTicketData.length > 0) {
+      handleOnSave();
+    }
+  }, [JSON.stringify(selectedTicketData), promocode]);
+
+  const handleOnSave = async () => {
+    setIsLoading(true);
+    try {
+      let selectedTicketInput = {
+        event_id: event?.event_id,
+        guest_user: true,
+        guest_details: {
+          name: formData?.name,
+          email: formData?.email,
+        },
+        tickets: selectedTicketData,
+        promo_code: promocode,
+      };
+      const response = await fetchTickets({
+        variables: { selectedTicketInput },
+      });
+      setProceed(false);
+      setData(response?.data?.selectTicketsStep2);
+      let ticketRes = response?.data?.selectTicketsStep2?.tickets;
+      type == "promocode" ? showMessage():""
+      setAllTicketData(ticketRes);
+      await getSelectedTerms(ticketRes);
+      setIsLoading(false);
+      console.log("Response:", ticketRes);
+    } catch (err) {
+      setIsLoading(false);
+      setProceed(true);
+      console.error("Failed to fetch data:", err);
+    }
+  };
+  const showMessage = () =>{
+    console.log(data?.promo_code?.value,"data?.promo_code?.value",data?.promo_code)
+    if(data?.promo_code?.value == null ||data?.promo_code?.value == "" ){
+     toast.error(data?.promo_code?.message)
+     return
+    }
+    toast.success(data?.promo_code?.message)
+
   }
+
+  const handleNextStep = () => {
+    if (selectedTicketTerms.length !== acceptedTerms.length) {
+      toast.error("Please accept all terms & conditions before proceeding.");
+      return;
+    }
+    if (data?.addons) {
+      router.push(`/event/${event?.event_id}/buy/addons`);
+    }
+    // Proceed to the next step...
+  };
+
+  const getSelectedTerms = (ticketRes: any) => {
+    const matchedTerms = selectedTicketData
+      .map(
+        (selectedTicket: { ticket_id: any }) =>
+          ticketRes.find(
+            (ticket: any) => ticket.ticket_id === selectedTicket.ticket_id
+          )?.terms || []
+      )
+      .flat();
+    setSelectedTicketTerms(matchedTerms);
+  };
+  const handleAcceptTerm = (term: string) => {
+    setAcceptedTerms((prev) =>
+      prev.includes(term) ? prev.filter((t) => t !== term) : [...prev, term]
+    );
+  };
+
   if (eventLoading || ticketLoading) return <Loading />;
 
   return (
@@ -174,9 +274,53 @@ export default function EventDetail() {
             </form>
           </div>
         )}
-        {/* {showTickets && ( */}
-        <TicketList tickets={tickets} event={event} handleTickets={handleTickets}/>
-        {/* )} */}
+        {showTickets && (
+          <>
+            <TicketList
+              tickets={allTicketData}
+              event={event}
+              handleTickets={handleData}
+              isDisable={isLoading}
+            />
+            <PromCode
+              isDisable={selectedTicketData.length === 0 || isLoading}
+              promo_code={data?.promo_code}
+              handlePromocode={handleData}
+            />
+            <div className="col-12 mt-2 mt-sm-0">
+              {selectedTicketTerms.length > 0 && (
+                <div className={classNames("mt-3", classes.ul_decorator)}>
+                  <h5>Terms & Conditions:</h5>
+                  {selectedTicketTerms.map((term, index) => (
+                    <div key={index} className={classes.terms_div}>
+                      <input
+                        type="checkbox"
+                        className={classes.checkbox}
+                        checked={acceptedTerms.includes(term)}
+                        onChange={() => handleAcceptTerm(term)}
+                      />
+                      {term}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <button
+                onClick={handleNextStep}
+                className={classNames(
+                  "btn btn-dark mt-3 ms-2",
+                  classes.menu_btn
+                )}
+                disabled={processed}
+                style={{
+                  opacity: processed ? 0.5 : 1,
+                }}
+              >
+                Proceed to next step
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
