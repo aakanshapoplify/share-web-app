@@ -24,7 +24,7 @@ export default function EventPage() {
     if (eventId) {
       QRCode.toDataURL(`${SHARE_DOMAIN}/event/${eventId}/buy`)
         .then(setQrcode)
-        .catch(console.error); // Catch any errors
+        .catch(console.error);
     }
   }, [eventId]);
 

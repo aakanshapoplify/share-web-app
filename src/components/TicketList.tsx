@@ -64,7 +64,7 @@ const TicketList = ({ tickets, event, handleTickets, isDisable }: Props) => {
       <h5 className={classes.event_name}>Get your tickets!</h5>
       <div className="row">
         {ticketListing?.map((item) => (
-          <div key={item.ticket_id} className="col-md-12">
+          <div key={item.ticket_id} className="col-md-12 mt-2">
             <div
               className={classNames(
                 classes.card_start,

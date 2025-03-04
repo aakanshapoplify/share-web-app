@@ -23,8 +23,6 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  console.log("GRAPHQL_AUTH_HEADER:", GRAPHQL_AUTH_HEADER);
-  console.log("GRAPHQL_HOST:", GRAPHQL_HOST);
   const client = new ApolloClient({
     cache: new InMemoryCache(),
     defaultOptions: {

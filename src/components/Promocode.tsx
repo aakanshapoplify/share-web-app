@@ -37,7 +37,7 @@ const PromCode = ({ handlePromocode, isDisable,promo_code }: Props) => {
       <h5 className={classes.event_name}>Promo Code</h5>
       <form  onSubmit={handleSubmit}>
         <div className={classNames(classes.card_start, "card", "p-3")}>
-          <div className={classNames(classes.input_form, "form-group mb-3")}>
+          <div className={classNames(classes.input_form, "form-group")}>
             <input
               type="text"
               name="promocode"
@@ -50,8 +50,11 @@ const PromCode = ({ handlePromocode, isDisable,promo_code }: Props) => {
             />
             <button
               type="submit"
-              className={classNames(classes.btn_apply, "btn")}
+              className={classNames(classes.btn_apply, "btn","btn-dark")}
               disabled={isDisable || promo_code?.value}
+              style={{
+                opacity: (isDisable || promo_code?.value) ? 0.5 : 1,
+              }}
             >
               Apply
             </button>

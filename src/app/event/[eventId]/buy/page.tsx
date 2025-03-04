@@ -98,7 +98,6 @@ export default function EventDetail() {
     setShowTickets(true);
   };
   const handleData = async (data: any, type: string) => {
-    console.log(data, "data");
     setType(type)
     type === "ticket"
       ? setSelectedTicketData(data)
@@ -136,7 +135,6 @@ export default function EventDetail() {
       setAllTicketData(ticketRes);
       await getSelectedTerms(ticketRes);
       setIsLoading(false);
-      console.log("Response:", ticketRes);
     } catch (err) {
       setIsLoading(false);
       setProceed(true);
