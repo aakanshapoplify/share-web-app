@@ -30,7 +30,7 @@ const TicketList = ({ tickets, event, handleTickets, isDisable }: Props) => {
 
   const updateTicketCount = (ticketId: string, change: number) => {
     setTicketListing((prevTickets) =>
-      prevTickets.map((ticket) =>
+      prevTickets?.map((ticket) =>
         ticket.ticket_id === ticketId
           ? { ...ticket, selected: Math.max(0, ticket.selected + change) }
           : ticket
@@ -44,7 +44,7 @@ const TicketList = ({ tickets, event, handleTickets, isDisable }: Props) => {
       return;
     }
 
-    const selectedData = ticketListing.map(({ ticket_id, selected }) => ({
+    const selectedData = ticketListing?.map(({ ticket_id, selected }) => ({
       ticket_id,
       selected,
     }));
@@ -52,7 +52,7 @@ const TicketList = ({ tickets, event, handleTickets, isDisable }: Props) => {
     if (
       JSON.stringify(selectedData) !==
       JSON.stringify(
-        tickets.map(({ ticket_id, selected }) => ({ ticket_id, selected }))
+        tickets?.map(({ ticket_id, selected }) => ({ ticket_id, selected }))
       )
     ) {
       handleTickets(selectedData,"ticket");

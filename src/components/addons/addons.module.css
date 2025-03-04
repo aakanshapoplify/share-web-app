@@ -1,0 +1,27 @@
+.addonCard_start {
+    max-width: 383px !important;
+    min-width:  383px !important;
+    background-color: #f6f4f4 !important;
+  }
+  .card-title span {
+    font-weight: bold;
+  }
+  .mandatoryIcon{
+    color: red;
+    font-size: 20px;
+    padding: 4px;
+  }
+  .table_responsive{
+    overflow: auto !important;
+    max-height: 500px !important;
+  }
+  .wrap_text {
+    word-wrap: break-word;
+    white-space: normal;
+    overflow-wrap: break-word;
+  }
+  .button {
+    display: flex;
+    align-items: center;
+    
+  }

@@ -17,6 +17,7 @@ import TicketList from "@/components/TicketList";
 import { toast } from "react-toastify";
 import PromCode from "@/components/Promocode";
 import { useRouter } from "next/navigation";
+import Addons from "@/components/Addons/page";
 
 export default function EventDetail() {
   const router = useRouter();
@@ -27,6 +28,7 @@ export default function EventDetail() {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const emailRegex = /^\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/;
   const [showTickets, setShowTickets] = useState(false);
+  const [showTicketsAddons, setShowTicketsAddons] = useState(false);
   const [selectedTicketData, setSelectedTicketData] = useState<any>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [promocode, setPromocode] = useState("");
@@ -34,7 +36,7 @@ export default function EventDetail() {
   const [processed, setProceed] = useState(true);
   const [selectedTicketTerms, setSelectedTicketTerms] = useState<string[]>([]);
   const [acceptedTerms, setAcceptedTerms] = useState<string[]>([]);
-  const [type,setType] = useState("");
+  const [type, setType] = useState("");
 
   const { data: eventData, loading: eventLoading } = useQuery(GET_EVENT, {
     variables: { event_id: eventId },
@@ -98,7 +100,7 @@ export default function EventDetail() {
     setShowTickets(true);
   };
   const handleData = async (data: any, type: string) => {
-    setType(type)
+    setType(type);
     type === "ticket"
       ? setSelectedTicketData(data)
       : type === "promocode"
@@ -128,28 +130,37 @@ export default function EventDetail() {
       const response = await fetchTickets({
         variables: { selectedTicketInput },
       });
-      setProceed(false);
-      setData(response?.data?.selectTicketsStep2);
-      let ticketRes = response?.data?.selectTicketsStep2?.tickets;
-      type == "promocode" ? showMessage():""
-      setAllTicketData(ticketRes);
-      await getSelectedTerms(ticketRes);
-      setIsLoading(false);
+      if (response?.data?.selectTicketsStep2) {
+        setProceed(false);
+        setData(response?.data?.selectTicketsStep2);
+        let ticketRes = response?.data?.selectTicketsStep2?.tickets;
+        type == "promocode" ? showMessage() : "";
+        setAllTicketData(ticketRes);
+        await getSelectedTerms(ticketRes);
+        setIsLoading(false);
+      } else {
+        setProceed(false);
+        setIsLoading(false);
+        // Handle GraphQL API errors
+        const errorMessage =
+          response?.errors?.[0]?.message ||
+          "Something went wrong!";
+        console.error("GraphQL Error:", errorMessage);
+        toast.error(errorMessage);
+      }
     } catch (err) {
       setIsLoading(false);
-      setProceed(true);
+      setProceed(false);
       console.error("Failed to fetch data:", err);
     }
   };
-  const showMessage = () =>{
-    console.log(data?.promo_code?.value,"data?.promo_code?.value",data?.promo_code)
-    if(data?.promo_code?.value == null ||data?.promo_code?.value == "" ){
-     toast.error(data?.promo_code?.message)
-     return
+  const showMessage = () => {
+    if (data?.promo_code?.value == null || data?.promo_code?.value == "") {
+      toast.error(data?.promo_code?.message);
+      return;
     }
-    toast.success(data?.promo_code?.message)
-
-  }
+    toast.success(data?.promo_code?.message);
+  };
 
   const handleNextStep = () => {
     if (selectedTicketTerms.length !== acceptedTerms.length) {
@@ -157,17 +168,18 @@ export default function EventDetail() {
       return;
     }
     if (data?.addons) {
-      router.push(`/event/${event?.event_id}/buy/addons`);
+      setShowTickets(false);
+      setShowTicketsAddons(true);
     }
     // Proceed to the next step...
   };
 
   const getSelectedTerms = (ticketRes: any) => {
     const matchedTerms = selectedTicketData
-      .map(
+      ?.map(
         (selectedTicket: { ticket_id: any }) =>
-          ticketRes.find(
-            (ticket: any) => ticket.ticket_id === selectedTicket.ticket_id
+          ticketRes?.find(
+            (ticket: any) => ticket?.ticket_id === selectedTicket?.ticket_id
           )?.terms || []
       )
       .flat();
@@ -175,7 +187,7 @@ export default function EventDetail() {
   };
   const handleAcceptTerm = (term: string) => {
     setAcceptedTerms((prev) =>
-      prev.includes(term) ? prev.filter((t) => t !== term) : [...prev, term]
+      prev?.includes(term) ? prev?.filter((t) => t !== term) : [...prev, term]
     );
   };
 
@@ -219,7 +231,7 @@ export default function EventDetail() {
             </small>
           </div>
         </div>
-        {!showTickets && (
+        {!showTickets && !showTicketsAddons && (
           <div className={classNames(classes.user_details, "mt-4")}>
             <h5 className={classes.event_name}>Enter your details:</h5>
             <form>
@@ -272,7 +284,7 @@ export default function EventDetail() {
             </form>
           </div>
         )}
-        {showTickets && (
+        {showTickets && !showTicketsAddons && (
           <>
             <TicketList
               tickets={allTicketData}
@@ -289,7 +301,7 @@ export default function EventDetail() {
               {selectedTicketTerms.length > 0 && (
                 <div className={classNames("mt-3", classes.ul_decorator)}>
                   <h5>Terms & Conditions:</h5>
-                  {selectedTicketTerms.map((term, index) => (
+                  {selectedTicketTerms?.map((term, index) => (
                     <div key={index} className={classes.terms_div}>
                       <input
                         type="checkbox"
@@ -317,6 +329,11 @@ export default function EventDetail() {
                 Proceed to next step
               </button>
             </div>
+          </>
+        )}
+        {showTicketsAddons && !showTickets && (
+          <>
+            <Addons addonsData={data.addons} />
           </>
         )}
       </div>
