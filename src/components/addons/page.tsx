@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import classes from "./addons.module.css";
 import classNames from "classnames";
+import { toast } from "react-toastify";
 
 interface Options {
   name: string;
@@ -21,19 +22,104 @@ interface AddonsProps {
 }
 interface Props {
   addonsData: AddonsProps[];
+  handleAddons: (data: any,type:string) => void;
 }
 
-const Addons = ({ addonsData }: Props) => {
-  const [addonsOptionId, setAddonsOptionId ] = useState<Options[]>();
+const Addons = ({ addonsData,handleAddons }: Props) => {
+  const [selectedOptions, setSelectedOptions] = useState<Options[]>([]);
+  const [textResponses, setTextResponses] = useState<{ [key: string]: string }>(
+    {}
+  );
+
+  useEffect(() => {
+    const multiSelectOptions = addonsData
+      .filter((addon) => addon.field_type === "MULTI_SELECT")
+      .flatMap((addon) =>
+        addon.options.map((option) => ({ ...option, selected: 0 }))
+      );
+    setSelectedOptions(multiSelectOptions);
+
+    // Initialize text responses with event_addon_id as key
+    const initialTextResponses = addonsData
+      .filter((addon) => addon.field_type === "TEXT_RESPONSE")
+      .reduce((acc, addon) => {
+        acc[addon.event_addon_id] = "";
+        return acc;
+      }, {} as { [key: string]: string });
+
+    setTextResponses(initialTextResponses);
+  }, [addonsData]);
+
   const updateTicketCount = (ticketId: string, change: number) => {
-    setAddonsOptionId((prevTickets) =>
-      prevTickets?.map((ticket) =>
-        ticket.addon_option_id === ticketId
-          ? { ...ticket, selected: Math.max(0, ticket.selected + change) }
-          : ticket
+    setSelectedOptions((prev) =>
+      prev.map((option) =>
+        option.addon_option_id === ticketId
+          ? { ...option, selected: Math.max(0, option.selected + change) }
+          : option
       )
     );
   };
+
+  const handleTextChange = (
+    event: React.ChangeEvent<HTMLTextAreaElement>,
+    addonId: string
+  ) => {
+    const text = event.target.value;
+    if (text.length <= 200) {
+      setTextResponses((prev) => ({
+        ...prev,
+        [addonId]: text,
+      }));
+    }
+  };
+  const handleProceed = async () => {
+    let errorMessages: string[] = [];
+    const textResponsesData = addonsData
+      .filter((addon) => addon.field_type === "TEXT_RESPONSE")
+      .map((addon) => {
+        const value = textResponses[addon.event_addon_id] || "";
+        if (addon.mandatory && !value.trim()) {
+          errorMessages.push(`Text field is required.`);
+        }
+        return {
+          event_addon_id: addon.event_addon_id,
+          field_type: addon.field_type,
+          value,
+        };
+      });
+ // Validate multi-select options
+    const multiSelectData = addonsData
+      .filter((addon) => addon.field_type === "MULTI_SELECT")
+      .map((addon) => {
+        const selectedOptionsList = selectedOptions
+          .filter((option) => addon.options.some((opt) => opt.addon_option_id === option.addon_option_id))
+          .map((option) => ({
+            addon_option_id: option.addon_option_id,
+            selected: option.selected,
+          }));
+
+        if (addon.mandatory && selectedOptionsList.every((opt) => opt.selected === 0)) {
+          errorMessages.push(`- Please select at least one option`);
+        }
+
+        return {
+          event_addon_id: addon.event_addon_id,
+          field_type:addon.field_type,
+          options: selectedOptionsList,
+        };
+      });
+
+    if (errorMessages.length > 0) {
+      toast.error(`Please fill the required fields`);
+      return;
+    }
+    const requestData = {
+          addons: [...textResponsesData, ...multiSelectData],
+        }
+    
+    await handleAddons(requestData.addons,"addons")
+  };
+
   return (
     <div
       className={classNames(
@@ -52,7 +138,8 @@ const Addons = ({ addonsData }: Props) => {
             <div className="card-body">
               {addonsData?.map((item, index) => (
                 <div key={index}>
-                  {item?.field_type == "TEXT_RESPONSE" && (
+                  {/* TEXT RESPONSE FIELD */}
+                  {item.field_type === "TEXT_RESPONSE" && (
                     <div className="mb-4">
                       <label className={classes.card_title}>
                         {item.question}
@@ -65,95 +152,110 @@ const Addons = ({ addonsData }: Props) => {
                           classes.addon_textarea,
                           "form-control"
                         )}
-                        id={`addon-textarea-${index}`}
+                        id={`addon-textarea-${item.event_addon_id}`}
                         maxLength={200}
+                        rows={4}
+                        value={textResponses[item.event_addon_id] || ""}
+                        onChange={(e) =>
+                          handleTextChange(e, item.event_addon_id)
+                        }
                       ></textarea>
-                      <small
-                      >
-                        200
+                      <small>
+                        {textResponses[item.event_addon_id]?.length || 0} / 200
                       </small>
                     </div>
                   )}
-                  {item?.field_type == "MULTI_SELECT" && (
-                    <>
-                      {item?.options?.length > 0 && (
-                        <div>
-                          <p className={classes.card_title}>
-                            {item.question}
-                            {item.mandatory && (
-                              <small className={classes.mandatoryIcon}>*</small>
-                            )}
-                          </p>
-                          <div className={classes.table_responsive}>
-                            <table className="table">
-                              <tbody>
-                                {item.options.map((data, optIndex) => (
-                                  <tr key={optIndex}>
-                                    <td className="tb-name">
-                                      <p className={classes.wrap_text}>{data.name}</p>
-                                    </td>
-                                    <td>
-                                      <p>
-                                        {data.currency}
-                                        {data.price}
-                                      </p>
-                                      {data.price === 0 && <p>Free</p>}
-                                    </td>
-                                    <td>
-                                      <div
-                                        className={classes.button}
-                                        id="tickets-container"
+
+                  {/* MULTI SELECT FIELD */}
+                  {item.field_type === "MULTI_SELECT" &&
+                    item.options.length > 0 && (
+                      <div>
+                        <p className={classes.card_title}>
+                          {item.question}
+                          {item.mandatory && (
+                            <small className={classes.mandatoryIcon}>*</small>
+                          )}
+                        </p>
+                        <div className={classes.table_responsive}>
+                          <table className="table">
+                            <tbody>
+                              {selectedOptions.map((data, optIndex) => (
+                                <tr key={optIndex} className={classes.table_tr}>
+                                  <td className="tb-name">
+                                    <p className={classes.wrap_text}>
+                                      {data.name}
+                                    </p>
+                                  </td>
+                                  <td>
+                                    <p>
+                                      {data.currency}
+                                      {data.price}
+                                    </p>
+                                    {data.price === 0 && <p>Free</p>}
+                                  </td>
+                                  <td className={classes.table_td}>
+                                    <div className={classes.button}>
+                                      <span
+                                        className={classNames(
+                                          classes.pointer,
+                                          "decrement-btn"
+                                        )}
+                                        onClick={() =>
+                                          updateTicketCount(
+                                            data.addon_option_id,
+                                            -1
+                                          )
+                                        }
                                       >
-                                        <span
-                                          className="m-2 decrement-btn"
-                                          onClick={() =>
-                                            updateTicketCount(
-                                              data.addon_option_id,
-                                              -1
-                                            )
-                                          }
-                                        >
-                                          <i className="bi bi-dash-circle-fill"></i>
-                                        </span>
+                                        <i className="bi bi-dash-circle-fill"></i>
+                                      </span>
 
-                                        <span
-                                          className={classes.quantity_display}
-                                        >
-                                          {data.selected}
-                                        </span>
+                                      <span
+                                        className={classNames(
+                                          classes.quantity_display,
+                                          "ms-2",
+                                          "me-2"
+                                        )}
+                                      >
+                                        {data.selected}
+                                      </span>
 
-                                        <span
-                                          className="m-2 increment-btn"
-                                          onClick={() =>
-                                            updateTicketCount(
-                                              data.addon_option_id,
-                                              1
-                                            )
-                                          }
-                                        >
-                                          <i className="bi bi-plus-circle-fill"></i>
-                                        </span>
-                                      </div>
-                                    </td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
+                                      <span
+                                        className={classNames(
+                                          classes.pointer,
+                                          "increment-btn"
+                                        )}
+                                        onClick={() =>
+                                          updateTicketCount(
+                                            data.addon_option_id,
+                                            1
+                                          )
+                                        }
+                                      >
+                                        <i className="bi bi-plus-circle-fill"></i>
+                                      </span>
+                                    </div>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
                         </div>
-                      )}
-                    </>
-                  )}
+                      </div>
+                    )}
                 </div>
               ))}
 
               {/* Proceed Button */}
-              <button
-                type="submit"
-                className={classNames(classes.btn_apply, "btn", "btn-dark")}
-              >
-                Proceed to Next Step
-              </button>
+              <div className="col-12 mt-2 mt-sm-0">
+                <button
+                  type="button"
+                  className={classNames(classes.menu_btn, "btn", "btn-dark")}
+                  onClick={handleProceed}
+                >
+                  Proceed to Next Step
+                </button>
+              </div>
             </div>
           </div>
         </div>

@@ -37,6 +37,7 @@ export default function EventDetail() {
   const [selectedTicketTerms, setSelectedTicketTerms] = useState<string[]>([]);
   const [acceptedTerms, setAcceptedTerms] = useState<string[]>([]);
   const [type, setType] = useState("");
+  const [AddonsData,setAddonsData] = useState<any>([]);
 
   const { data: eventData, loading: eventLoading } = useQuery(GET_EVENT, {
     variables: { event_id: eventId },
@@ -105,14 +106,16 @@ export default function EventDetail() {
       ? setSelectedTicketData(data)
       : type === "promocode"
       ? setPromocode(data)
-      : "";
+      :  type === "addons"
+      ? setAddonsData(data)
+      :""
   };
 
   useEffect(() => {
     if (selectedTicketData.length > 0) {
       handleOnSave();
     }
-  }, [JSON.stringify(selectedTicketData), promocode]);
+  }, [JSON.stringify(selectedTicketData), promocode,AddonsData]);
 
   const handleOnSave = async () => {
     setIsLoading(true);
@@ -126,6 +129,7 @@ export default function EventDetail() {
         },
         tickets: selectedTicketData,
         promo_code: promocode,
+        addons:AddonsData
       };
       const response = await fetchTickets({
         variables: { selectedTicketInput },
@@ -333,7 +337,7 @@ export default function EventDetail() {
         )}
         {showTicketsAddons && !showTickets && (
           <>
-            <Addons addonsData={data.addons} />
+            <Addons addonsData={data.addons}  handleAddons={handleData}/>
           </>
         )}
       </div>
