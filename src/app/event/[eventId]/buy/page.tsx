@@ -2,12 +2,17 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { useQuery, useLazyQuery } from "@apollo/client";
+import { useQuery, useLazyQuery, useMutation } from "@apollo/client";
 import {
   GET_EVENT,
   GET_EVENT_DETAILS,
   ACTIONS_UPDATES,
 } from "../../../../graphql/event.graphql";
+import {
+  SETUP_PAYMENT,
+  JOIN_EVENT
+}
+from "../../../../graphql/payment.graphql";
 
 import Loading from "@/components/Loading";
 import classNames from "classnames";
@@ -38,6 +43,7 @@ export default function EventDetail() {
   const [acceptedTerms, setAcceptedTerms] = useState<string[]>([]);
   const [type, setType] = useState("");
   const [AddonsData,setAddonsData] = useState<any>([]);
+  const [setupPayment] = useMutation(SETUP_PAYMENT)
 
   const { data: eventData, loading: eventLoading } = useQuery(GET_EVENT, {
     variables: { event_id: eventId },
@@ -195,6 +201,10 @@ export default function EventDetail() {
     );
   };
 
+  const handleToNextStep = (type:string) => {
+  console.log(type,"type")
+  }
+
   if (eventLoading || ticketLoading) return <Loading />;
 
   return (
@@ -318,6 +328,13 @@ export default function EventDetail() {
                   ))}
                 </div>
               )}
+              {data?.total > 0 &&
+              <div className={classNames("mb-1",classes.amount )} id="amount-div">
+                <small>Booking fees: {data?.currency_symbol} {parseFloat(data?.booking_fee)?.toFixed(2)}</small>
+                <p className="card-title"> <span id="total-amount">{data?.currency_symbol} {parseFloat(data?.total)?.toFixed(2)}</span></p>
+              </div>
+                 }
+
 
               <button
                 onClick={handleNextStep}
@@ -337,7 +354,7 @@ export default function EventDetail() {
         )}
         {showTicketsAddons && !showTickets && (
           <>
-            <Addons addonsData={data.addons}  handleAddons={handleData}/>
+            <Addons addonsData={data.addons} processToNext={handleToNextStep} handleAddons={handleData}/>
           </>
         )}
       </div>

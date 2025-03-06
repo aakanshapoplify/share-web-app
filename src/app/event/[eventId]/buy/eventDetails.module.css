@@ -62,3 +62,7 @@
       margin-right: 15PX;
       color: white !important;
 }
+.amount {
+  display: grid;
+  justify-content: end;
+}

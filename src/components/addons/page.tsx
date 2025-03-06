@@ -20,13 +20,20 @@ interface AddonsProps {
   field_type: string;
   options: Options[];
 }
+interface props {
+  total: string;
+  currency_symbol: string;
+  booking_fee: string;
+  addons: AddonsProps[];
+}
 
 interface Props {
   addonsData: AddonsProps[];
   handleAddons: (data: any[], type: string) => void;
+  processToNext: (type: string) => void;
 }
 
-const Addons = ({ addonsData, handleAddons }: Props) => {
+const Addons = ({ addonsData, handleAddons, processToNext }: Props) => {
   const [addons, setAddons] = useState<AddonsProps[]>([]);
   const [selectedOptions, setSelectedOptions] = useState<Options[]>([]);
   const [textResponses, setTextResponses] = useState<{ [key: string]: string }>(
@@ -168,6 +175,7 @@ const Addons = ({ addonsData, handleAddons }: Props) => {
     }
 
     if (currentFieldType === "MULTI_SELECT") {
+      processToNext("netProcess");
       addons
         .filter((addon) => addon.field_type === "MULTI_SELECT")
         .forEach((addon) => {
@@ -341,6 +349,12 @@ const Addons = ({ addonsData, handleAddons }: Props) => {
                       )}
                   </div>
                 ))}
+              {/* {data?.total > 0 &&
+                <div className={classNames("mb-1",classes.amount )} id="amount-div">
+                <small>Booking fees: {data?.currency_symbol} {parseFloat(data?.booking_fee)?.toFixed(2)}</small>
+                <p className="card-title"> <span id="total-amount">{data?.currency_symbol} {parseFloat(data?.total)?.toFixed(2)}</span></p>
+               </div>
+                 } */}
 
               {/* Proceed Button */}
               <div className="col-12 mt-2 mt-sm-0">

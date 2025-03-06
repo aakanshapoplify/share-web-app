@@ -39,3 +39,7 @@
   .menu_btn {
     width: inherit;
   }
+  .amount {
+    display: grid;
+    justify-content: end;
+  }
