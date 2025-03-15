@@ -10,31 +10,26 @@ import theme from "@/theme";
 import CssBaseline from "@mui/material/CssBaseline";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css"; 
+import Script from "next/script";
 
-
-
-
-
-const GRAPHQL_AUTH_HEADER = process.env.NEXT_PUBLIC_GRAPHQL_AUTH_HEADER ?? "";
-const GRAPHQL_HOST = process.env.NEXT_PUBLIC_GRAPHQL_HOST ?? "";
+const client = new ApolloClient({
+  uri: process.env.NEXT_PUBLIC_GRAPHQL_HOST,
+  cache: new InMemoryCache(),
+  defaultOptions: {
+    query: { fetchPolicy: "no-cache" },
+    watchQuery: { fetchPolicy: "no-cache" },
+  },
+  headers: {
+    Authorization: process.env.NEXT_PUBLIC_GRAPHQL_AUTH_HEADER || "",
+    "Content-Type": "application/json",
+  },
+});
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const client = new ApolloClient({
-    cache: new InMemoryCache(),
-    defaultOptions: {
-      query: { fetchPolicy: "no-cache" },
-      watchQuery: { fetchPolicy: "no-cache" },
-    },
-    headers: {
-      Authorization: GRAPHQL_AUTH_HEADER,
-      "Content-Type": "application/json",
-    },
-    uri: GRAPHQL_HOST,
-  });
   return (
     <html lang="en">
       <head>
@@ -49,25 +44,26 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <link rel="apple-touch-icon" href="/app-icon.png" />
         <title>Share Event</title>
-        <script
-          src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDD6O57Fgp1fmHJmb8aHmUDEMiM795Aoc4&libraries=places"
-          async
-        ></script>
       </head>
       <body>
         <div id="root" className="main">
           <ApolloProvider client={client}>
-          <ThemeProvider theme={theme}>
-          <CssBaseline />
-          <ToastContainer />
-            <div className="body_layout">
-            <Header></Header>
-            {children}
-            </div>
+            <ThemeProvider theme={theme}>
+              <CssBaseline />
+              <ToastContainer />
+              <div className="body_layout">
+                <Header />
+                {children}
+              </div>
             </ThemeProvider>
           </ApolloProvider>
-          
         </div>
+        
+        {/* Load Google Maps API via next/script */}
+        <Script 
+          src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`} 
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );

@@ -44,6 +44,7 @@ export default function EventDetail() {
   const [type, setType] = useState("");
   const [AddonsData,setAddonsData] = useState<any>([]);
   const [setupPayment] = useMutation(SETUP_PAYMENT)
+  const [payment,setPayment]= useState<any>();
 
   const { data: eventData, loading: eventLoading } = useQuery(GET_EVENT, {
     variables: { event_id: eventId },
@@ -144,6 +145,12 @@ export default function EventDetail() {
         setProceed(false);
         setData(response?.data?.selectTicketsStep2);
         let ticketRes = response?.data?.selectTicketsStep2?.tickets;
+        let paymentObject={
+          total:response?.data?.selectTicketsStep2.total,
+          currency_symbol:response?.data?.selectTicketsStep2.currency_symbol,
+          booking_fee:response?.data?.selectTicketsStep2.booking_fee,
+        }
+        setPayment(paymentObject)
         type == "promocode" ? showMessage() : "";
         setAllTicketData(ticketRes);
         await getSelectedTerms(ticketRes);
@@ -354,7 +361,7 @@ export default function EventDetail() {
         )}
         {showTicketsAddons && !showTickets && (
           <>
-            <Addons addonsData={data.addons} processToNext={handleToNextStep} handleAddons={handleData}/>
+            <Addons addonsData={data.addons} processToNext={handleToNextStep} handleAddons={handleData} paymentObject={payment}/>
           </>
         )}
       </div>

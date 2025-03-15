@@ -28,12 +28,13 @@ interface props {
 }
 
 interface Props {
+  paymentObject:any;
   addonsData: AddonsProps[];
   handleAddons: (data: any[], type: string) => void;
   processToNext: (type: string) => void;
 }
 
-const Addons = ({ addonsData, handleAddons, processToNext }: Props) => {
+const Addons = ({ addonsData, handleAddons, processToNext,paymentObject }: Props) => {
   const [addons, setAddons] = useState<AddonsProps[]>([]);
   const [selectedOptions, setSelectedOptions] = useState<Options[]>([]);
   const [textResponses, setTextResponses] = useState<{ [key: string]: string }>(
@@ -349,12 +350,12 @@ const Addons = ({ addonsData, handleAddons, processToNext }: Props) => {
                       )}
                   </div>
                 ))}
-              {/* {data?.total > 0 &&
+              {paymentObject?.total > 0 &&
                 <div className={classNames("mb-1",classes.amount )} id="amount-div">
-                <small>Booking fees: {data?.currency_symbol} {parseFloat(data?.booking_fee)?.toFixed(2)}</small>
-                <p className="card-title"> <span id="total-amount">{data?.currency_symbol} {parseFloat(data?.total)?.toFixed(2)}</span></p>
+                <small>Booking fees: {paymentObject?.currency_symbol} {parseFloat(paymentObject?.booking_fee)?.toFixed(2)}</small>
+                <p className="card-title"> <span id="total-amount">{paymentObject?.currency_symbol} {parseFloat(paymentObject?.total)?.toFixed(2)}</span></p>
                </div>
-                 } */}
+                 }
 
               {/* Proceed Button */}
               <div className="col-12 mt-2 mt-sm-0">
