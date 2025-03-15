@@ -20,8 +20,14 @@ import PromCode from "@/components/Promocode";
 import { useRouter } from "next/navigation";
 import Addons from "@/components/Addons/page";
 import PaymentSucceed from "@/components/Succeed/page";
-import StripeWrapper from "@/components/StripeWrapper";
+// import StripeWrapper from "@/components/StripeWrapper";
 import CheckoutForm from "@/components/CheckoutForm";
+import { Elements } from "@stripe/react-stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
+
+const stripePromise = loadStripe(
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY as string
+);
 
 export default function EventDetail() {
   const router = useRouter();
@@ -47,7 +53,7 @@ export default function EventDetail() {
   const [paymentCheckout, setPaymentCheckout] = useState<any>();
   const [Succeed, setSucceed] = useState(false);
   const [stripProceed, setStripProceed] = useState(false);
-
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [payment, setPayment] = useState<any>();
 
@@ -200,7 +206,7 @@ export default function EventDetail() {
   };
 
   const handleToNextStep = (type: string) => {
-    paymentSetup()
+    paymentSetup();
   };
 
   const handleNextStep = () => {
@@ -237,12 +243,14 @@ export default function EventDetail() {
       });
 
       setPaymentCheckout(response?.data?.setupEventPayment);
-      if (response?.data?.setupEventPayment?.payment_intent_id && data?.total > 0) {
+      if (
+        response?.data?.setupEventPayment?.payment_intent_id &&
+        data?.total > 0
+      ) {
         setStripProceed(true);
+        setIsModalOpen(true)
       } else {
-        paymentProcess("")
-        // If payment isn't required
-        console.log("No payment required, proceed without Stripe.");
+        paymentProcess("");
       }
     } catch (err) {
       console.error("Failed to fetch data:", err);
@@ -251,7 +259,6 @@ export default function EventDetail() {
       setIsLoading(false);
     }
   };
-  
 
   const paymentProcess = async (paymentIntentId: any) => {
     setIsLoading(true);
@@ -271,28 +278,22 @@ export default function EventDetail() {
       const response = await paymentSuccess({
         variables: { selectedTicketInput },
       });
-      console.log(response,"response")
       redirectToSuccessPage();
-
-      // if(response?.data?.payment_intent_id && data?.total > 0 ){
-
-      // }else{
-
-      // }
     } catch (err) {
       setIsLoading(false);
       setProceed(false);
       console.error("Failed to fetch data:", err);
     }
   };
-  const paymentSubmit=(paymentIntentId:string)=>{
-    paymentProcess(paymentIntentId)
-  }
+  const paymentSubmit = (paymentIntentId: string) => {
+    paymentProcess(paymentIntentId);
+  };
 
   const redirectToSuccessPage = () => {
     setSucceed(true);
     setShowTicketsAddons(false);
     setShowTickets(false);
+    setStripProceed(false)
   };
 
   if (eventLoading || ticketLoading) return <Loading />;
@@ -316,7 +317,10 @@ export default function EventDetail() {
                 <i className="bi bi-ticket-fill"></i>
                 <small className={classes.icon}>
                   Ticket price:
-                  <small className={classes.card_title}> {selectedTicketData?.length>0 ?data?.total:event.price}</small>
+                  <small className={classes.card_title}>
+                    {" "}
+                    {selectedTicketData?.length > 0 ? data?.total : event.price}
+                  </small>
                 </small>
               </div>
 
@@ -453,7 +457,7 @@ export default function EventDetail() {
             </div>
           </>
         )}
-        {showTicketsAddons && !showTickets && !stripProceed &&  (
+        {showTicketsAddons && !showTickets && !stripProceed && (
           <>
             <Addons
               addonsData={data.addons}
@@ -468,14 +472,16 @@ export default function EventDetail() {
             <PaymentSucceed />
           </>
         )}
-         {stripProceed && paymentCheckout?.payment_intent_id && (
-        <StripeWrapper>
-          <CheckoutForm 
-            paymentIntentId={paymentCheckout.client_secret}
-            onSuccess={(paymentIntentId: string) => paymentSubmit(paymentIntentId)}
-          />
-        </StripeWrapper>
-      )}
+        {stripProceed && paymentCheckout?.payment_intent_id && (
+          <Elements stripe={stripePromise}>
+            <CheckoutForm
+              isOpen={isModalOpen}
+              onRequestClose={() => setIsModalOpen(false)}
+              clientSecret={paymentCheckout.client_secret}
+              onSuccess={paymentSubmit}
+            />
+          </Elements>
+        )}
       </div>
     </div>
   );

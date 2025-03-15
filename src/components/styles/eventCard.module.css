@@ -125,3 +125,45 @@
   cursor: pointer;
   border: 1px solid #80808000 !important;
 }
+/* For react-modal styling */
+.modal_overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal_content {
+  position: relative;
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 40%;
+  max-width: 50%;
+  margin: auto;
+ 
+}
+.event_name{
+  font-weight: 600;
+}
+.cancelBtn {
+    position: absolute;
+    top: -12px;
+    right: 0px;
+    font-size: 34px;
+    cursor: pointer;
+}
+
+.submitBtn{
+  width: 100%;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  border-radius: 20px ;
+  border: none;
+  background-color: #9e85e0;
+}
