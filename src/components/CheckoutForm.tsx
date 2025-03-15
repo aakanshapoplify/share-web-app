@@ -10,33 +10,34 @@ interface CheckoutFormProps {
 }
 
 const CheckoutForm: React.FC<CheckoutFormProps> = ({ paymentIntentId, onSuccess }) => {
+  console.log(paymentIntentId,"paymentIntentId")
   const stripe = useStripe();
   const elements = useElements();
   const [isProcessing, setIsProcessing] = useState(false);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-
+  
     if (!stripe || !elements) return;
-
+  
     setIsProcessing(true);
-
+  
     const cardElement = elements.getElement(CardElement);
     if (!cardElement) return;
-
-    const { error, paymentIntent } = await stripe.confirmCardPayment(paymentIntentId, {
-      payment_method: {
-        card: cardElement,
-      },
-    });
-
-    if (error) {
-      Swal.fire("Payment Failed", error.message || "Unknown error", "error");
-    } else if (paymentIntent && paymentIntent.status === "succeeded") {
-      Swal.fire("Payment Successful", "Your payment was processed successfully", "success");
-      onSuccess(paymentIntent.id);
+  
+      const { error, paymentIntent } = await stripe.confirmCardPayment(paymentIntentId, {
+        payment_method: {
+          card: cardElement,
+        },
+      });
+  
+      if (error) {
+        Swal.fire("Payment Failed", error.message || "Unknown error", "error");
+      } else if (paymentIntent && paymentIntent.status === "succeeded") {
+        Swal.fire("Payment Successful", "Your payment was processed successfully", "success");
+        onSuccess(paymentIntent.id);
     }
-
+  
     setIsProcessing(false);
   };
 

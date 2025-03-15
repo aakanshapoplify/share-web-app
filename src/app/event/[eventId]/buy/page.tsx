@@ -236,9 +236,8 @@ export default function EventDetail() {
         variables: { selectedTicketInput },
       });
 
-      setPaymentCheckout(response?.data);
-
-      if (response?.data?.payment_intent_id && response?.data?.total > 0) {
+      setPaymentCheckout(response?.data?.setupEventPayment);
+      if (response?.data?.setupEventPayment?.payment_intent_id && data?.total > 0) {
         setStripProceed(true);
       } else {
         paymentProcess("")
@@ -254,8 +253,6 @@ export default function EventDetail() {
   };
   
 
-  const stripePayment = () => {};
-
   const paymentProcess = async (paymentIntentId: any) => {
     setIsLoading(true);
     try {
@@ -266,7 +263,7 @@ export default function EventDetail() {
           name: formData?.name,
           email: formData?.email,
         },
-        stripe_payment_intent_id: paymentIntentId?.id || "",
+        stripe_payment_intent_id: paymentIntentId || "",
         tickets: selectedTicketData,
         promo_code: promocode,
         addons: AddonsData,
@@ -274,6 +271,7 @@ export default function EventDetail() {
       const response = await paymentSuccess({
         variables: { selectedTicketInput },
       });
+      console.log(response,"response")
       redirectToSuccessPage();
 
       // if(response?.data?.payment_intent_id && data?.total > 0 ){
@@ -287,6 +285,9 @@ export default function EventDetail() {
       console.error("Failed to fetch data:", err);
     }
   };
+  const paymentSubmit=(paymentIntentId:string)=>{
+    paymentProcess(paymentIntentId)
+  }
 
   const redirectToSuccessPage = () => {
     setSucceed(true);
@@ -470,8 +471,8 @@ export default function EventDetail() {
          {stripProceed && paymentCheckout?.payment_intent_id && (
         <StripeWrapper>
           <CheckoutForm 
-            paymentIntentId={paymentCheckout.payment_intent_id}
-            onSuccess={(paymentIntentId: string) => console.log("Payment successful:", paymentIntentId)}
+            paymentIntentId={paymentCheckout.client_secret}
+            onSuccess={(paymentIntentId: string) => paymentSubmit(paymentIntentId)}
           />
         </StripeWrapper>
       )}
