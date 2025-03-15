@@ -8,11 +8,7 @@ import {
   GET_EVENT_DETAILS,
   ACTIONS_UPDATES,
 } from "../../../../graphql/event.graphql";
-import {
-  SETUP_PAYMENT,
-  JOIN_EVENT
-}
-from "../../../../graphql/payment.graphql";
+import { SETUP_PAYMENT, JOIN_EVENT } from "../../../../graphql/payment.graphql";
 
 import Loading from "@/components/Loading";
 import classNames from "classnames";
@@ -23,6 +19,9 @@ import { toast } from "react-toastify";
 import PromCode from "@/components/Promocode";
 import { useRouter } from "next/navigation";
 import Addons from "@/components/Addons/page";
+import PaymentSucceed from "@/components/Succeed/page";
+import StripeWrapper from "@/components/StripeWrapper";
+import CheckoutForm from "@/components/CheckoutForm";
 
 export default function EventDetail() {
   const router = useRouter();
@@ -42,9 +41,15 @@ export default function EventDetail() {
   const [selectedTicketTerms, setSelectedTicketTerms] = useState<string[]>([]);
   const [acceptedTerms, setAcceptedTerms] = useState<string[]>([]);
   const [type, setType] = useState("");
-  const [AddonsData,setAddonsData] = useState<any>([]);
-  const [setupPayment] = useMutation(SETUP_PAYMENT)
-  const [payment,setPayment]= useState<any>();
+  const [AddonsData, setAddonsData] = useState<any>([]);
+  const [setupPayment] = useMutation(SETUP_PAYMENT);
+  const [paymentSuccess] = useMutation(JOIN_EVENT);
+  const [paymentCheckout, setPaymentCheckout] = useState<any>();
+  const [Succeed, setSucceed] = useState(false);
+  const [stripProceed, setStripProceed] = useState(false);
+
+
+  const [payment, setPayment] = useState<any>();
 
   const { data: eventData, loading: eventLoading } = useQuery(GET_EVENT, {
     variables: { event_id: eventId },
@@ -113,16 +118,16 @@ export default function EventDetail() {
       ? setSelectedTicketData(data)
       : type === "promocode"
       ? setPromocode(data)
-      :  type === "addons"
+      : type === "addons"
       ? setAddonsData(data)
-      :""
+      : "";
   };
 
   useEffect(() => {
     if (selectedTicketData.length > 0) {
       handleOnSave();
     }
-  }, [JSON.stringify(selectedTicketData), promocode,AddonsData]);
+  }, [JSON.stringify(selectedTicketData), promocode, AddonsData]);
 
   const handleOnSave = async () => {
     setIsLoading(true);
@@ -136,7 +141,7 @@ export default function EventDetail() {
         },
         tickets: selectedTicketData,
         promo_code: promocode,
-        addons:AddonsData
+        addons: AddonsData,
       };
       const response = await fetchTickets({
         variables: { selectedTicketInput },
@@ -145,12 +150,12 @@ export default function EventDetail() {
         setProceed(false);
         setData(response?.data?.selectTicketsStep2);
         let ticketRes = response?.data?.selectTicketsStep2?.tickets;
-        let paymentObject={
-          total:response?.data?.selectTicketsStep2.total,
-          currency_symbol:response?.data?.selectTicketsStep2.currency_symbol,
-          booking_fee:response?.data?.selectTicketsStep2.booking_fee,
-        }
-        setPayment(paymentObject)
+        let paymentObject = {
+          total: response?.data?.selectTicketsStep2.total,
+          currency_symbol: response?.data?.selectTicketsStep2.currency_symbol,
+          booking_fee: response?.data?.selectTicketsStep2.booking_fee,
+        };
+        setPayment(paymentObject);
         type == "promocode" ? showMessage() : "";
         setAllTicketData(ticketRes);
         await getSelectedTerms(ticketRes);
@@ -160,8 +165,7 @@ export default function EventDetail() {
         setIsLoading(false);
         // Handle GraphQL API errors
         const errorMessage =
-          response?.errors?.[0]?.message ||
-          "Something went wrong!";
+          response?.errors?.[0]?.message || "Something went wrong!";
         console.error("GraphQL Error:", errorMessage);
         toast.error(errorMessage);
       }
@@ -178,19 +182,6 @@ export default function EventDetail() {
     }
     toast.success(data?.promo_code?.message);
   };
-
-  const handleNextStep = () => {
-    if (selectedTicketTerms.length !== acceptedTerms.length) {
-      toast.error("Please accept all terms & conditions before proceeding.");
-      return;
-    }
-    if (data?.addons) {
-      setShowTickets(false);
-      setShowTicketsAddons(true);
-    }
-    // Proceed to the next step...
-  };
-
   const getSelectedTerms = (ticketRes: any) => {
     const matchedTerms = selectedTicketData
       ?.map(
@@ -208,9 +199,100 @@ export default function EventDetail() {
     );
   };
 
-  const handleToNextStep = (type:string) => {
-  console.log(type,"type")
-  }
+  const handleToNextStep = (type: string) => {
+    paymentSetup()
+  };
+
+  const handleNextStep = () => {
+    if (selectedTicketTerms.length !== acceptedTerms.length) {
+      toast.error("Please accept all terms & conditions before proceeding.");
+      return;
+    }
+    if (data?.addons?.length > 0) {
+      setShowTickets(false);
+      setShowTicketsAddons(true);
+    } else {
+      paymentSetup();
+    }
+    // Proceed to the next step...
+  };
+
+  const paymentSetup = async () => {
+    setIsLoading(true);
+    try {
+      let selectedTicketInput = {
+        event_id: event?.event_id,
+        guest_user: true,
+        guest_details: {
+          name: formData?.name,
+          email: formData?.email,
+        },
+        tickets: selectedTicketData,
+        promo_code: promocode,
+        addons: AddonsData,
+      };
+
+      const response = await setupPayment({
+        variables: { selectedTicketInput },
+      });
+
+      setPaymentCheckout(response?.data);
+
+      if (response?.data?.payment_intent_id && response?.data?.total > 0) {
+        setStripProceed(true);
+      } else {
+        paymentProcess("")
+        // If payment isn't required
+        console.log("No payment required, proceed without Stripe.");
+      }
+    } catch (err) {
+      console.error("Failed to fetch data:", err);
+      setStripProceed(false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+
+  const stripePayment = () => {};
+
+  const paymentProcess = async (paymentIntentId: any) => {
+    setIsLoading(true);
+    try {
+      let selectedTicketInput = {
+        event_id: event?.event_id,
+        guest_user: true,
+        guest_details: {
+          name: formData?.name,
+          email: formData?.email,
+        },
+        stripe_payment_intent_id: paymentIntentId?.id || "",
+        tickets: selectedTicketData,
+        promo_code: promocode,
+        addons: AddonsData,
+      };
+      const response = await paymentSuccess({
+        variables: { selectedTicketInput },
+      });
+      redirectToSuccessPage();
+
+      // if(response?.data?.payment_intent_id && data?.total > 0 ){
+
+      // }else{
+
+      // }
+    } catch (err) {
+      setIsLoading(false);
+      setProceed(false);
+      console.error("Failed to fetch data:", err);
+    }
+  };
+
+  const redirectToSuccessPage = () => {
+    setSucceed(true);
+    setShowTicketsAddons(false);
+    setShowTickets(false);
+  };
 
   if (eventLoading || ticketLoading) return <Loading />;
 
@@ -233,7 +315,7 @@ export default function EventDetail() {
                 <i className="bi bi-ticket-fill"></i>
                 <small className={classes.icon}>
                   Ticket price:
-                  <small className={classes.card_title}>{event.price}</small>
+                  <small className={classes.card_title}> {selectedTicketData?.length>0 ?data?.total:event.price}</small>
                 </small>
               </div>
 
@@ -252,7 +334,7 @@ export default function EventDetail() {
             </small>
           </div>
         </div>
-        {!showTickets && !showTicketsAddons && (
+        {!showTickets && !showTicketsAddons && !Succeed && !stripProceed && (
           <div className={classNames(classes.user_details, "mt-4")}>
             <h5 className={classes.event_name}>Enter your details:</h5>
             <form>
@@ -305,7 +387,7 @@ export default function EventDetail() {
             </form>
           </div>
         )}
-        {showTickets && !showTicketsAddons && (
+        {showTickets && !showTicketsAddons && !Succeed && !stripProceed && (
           <>
             <TicketList
               tickets={allTicketData}
@@ -335,13 +417,24 @@ export default function EventDetail() {
                   ))}
                 </div>
               )}
-              {data?.total > 0 &&
-              <div className={classNames("mb-1",classes.amount )} id="amount-div">
-                <small>Booking fees: {data?.currency_symbol} {parseFloat(data?.booking_fee)?.toFixed(2)}</small>
-                <p className="card-title"> <span id="total-amount">{data?.currency_symbol} {parseFloat(data?.total)?.toFixed(2)}</span></p>
-              </div>
-                 }
-
+              {data?.total > 0 && (
+                <div
+                  className={classNames("mb-1", classes.amount)}
+                  id="amount-div"
+                >
+                  <small>
+                    Booking fees: {data?.currency_symbol}{" "}
+                    {parseFloat(data?.booking_fee)?.toFixed(2)}
+                  </small>
+                  <p className="card-title">
+                    {" "}
+                    <span id="total-amount">
+                      {data?.currency_symbol}{" "}
+                      {parseFloat(data?.total)?.toFixed(2)}
+                    </span>
+                  </p>
+                </div>
+              )}
 
               <button
                 onClick={handleNextStep}
@@ -359,11 +452,29 @@ export default function EventDetail() {
             </div>
           </>
         )}
-        {showTicketsAddons && !showTickets && (
+        {showTicketsAddons && !showTickets && !stripProceed &&  (
           <>
-            <Addons addonsData={data.addons} processToNext={handleToNextStep} handleAddons={handleData} paymentObject={payment}/>
+            <Addons
+              addonsData={data.addons}
+              processToNext={handleToNextStep}
+              handleAddons={handleData}
+              paymentObject={payment}
+            />
           </>
         )}
+        {!showTicketsAddons && !showTickets && Succeed && !stripProceed && (
+          <>
+            <PaymentSucceed />
+          </>
+        )}
+         {stripProceed && paymentCheckout?.payment_intent_id && (
+        <StripeWrapper>
+          <CheckoutForm 
+            paymentIntentId={paymentCheckout.payment_intent_id}
+            onSuccess={(paymentIntentId: string) => console.log("Payment successful:", paymentIntentId)}
+          />
+        </StripeWrapper>
+      )}
       </div>
     </div>
   );

@@ -28,6 +28,10 @@ const TicketList = ({ tickets, event, handleTickets, isDisable }: Props) => {
   const [eventRecord, setEventRecord] = useState<Event>(event);
   const isFirstRender = useRef(true);
 
+  useEffect(()=>{
+    setTicketListing(tickets)
+  },[tickets])
+   
   const updateTicketCount = (ticketId: string, change: number) => {
     setTicketListing((prevTickets) =>
       prevTickets?.map((ticket) =>
@@ -48,16 +52,9 @@ const TicketList = ({ tickets, event, handleTickets, isDisable }: Props) => {
       ticket_id,
       selected,
     }));
-
-    if (
-      JSON.stringify(selectedData) !==
-      JSON.stringify(
-        tickets?.map(({ ticket_id, selected }) => ({ ticket_id, selected }))
-      )
-    ) {
-      handleTickets(selectedData,"ticket");
-    }
+    handleTickets(selectedData, "ticket"); 
   }, [ticketListing]);
+
 
   return (
     <div className="mt-4">
@@ -92,8 +89,7 @@ const TicketList = ({ tickets, event, handleTickets, isDisable }: Props) => {
                       </span>
                     </p>
                   )}
-
-                  {item.remaining === 0 ? (
+                  {item.remaining === 0 && item.selected === 0 ? (
                     <div className={classes.button}>
                       <a className={classes.decorator}>Sold out</a>
                     </div>
