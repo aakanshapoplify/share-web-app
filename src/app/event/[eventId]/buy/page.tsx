@@ -20,7 +20,6 @@ import PromCode from "@/components/Promocode";
 import { useRouter } from "next/navigation";
 import Addons from "@/components/Addons/page";
 import PaymentSucceed from "@/components/Succeed/page";
-// import StripeWrapper from "@/components/StripeWrapper";
 import CheckoutForm from "@/components/CheckoutForm";
 import { Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
@@ -130,7 +129,7 @@ export default function EventDetail() {
   };
 
   useEffect(() => {
-    if (selectedTicketData.length > 0) {
+    if (selectedTicketData?.length > 0) {
       handleOnSave();
     }
   }, [JSON.stringify(selectedTicketData), promocode, AddonsData]);
@@ -257,7 +256,7 @@ export default function EventDetail() {
       setStripProceed(false);
     } finally {
       setIsLoading(false);
-    }
+    } 
   };
 
   const paymentProcess = async (paymentIntentId: any) => {
