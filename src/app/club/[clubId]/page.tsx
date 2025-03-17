@@ -7,6 +7,8 @@ import classNames from "classnames";
 import classes from "./club.module.css";
 import QRCode from "qrcode";
 import { useEffect, useState } from "react";
+import { redirectToAppOrStore } from "@/utils/redirectHandler";
+import Link from "next/link";
 
 const SHARE_DOMAIN = process.env.NEXT_PUBLIC_SHARE_DOMAIN ?? "";
 
@@ -109,12 +111,16 @@ export default function ClubPage() {
 
         <div className="justify-content-sm-center mt-2">
           <div className="col-12 mt-2 mt-sm-0">
-            <a
-              className={classNames("btn btn-dark", classes.menu_btn)}
+          <Link
+              className={classNames("btn btn-dark open-link", classes.menu_btn)}
               href={`cliq://clubs/${clubId}`}
+              onClick={(club) => {
+                club.preventDefault();
+                redirectToAppOrStore(club);
+              }}
             >
-              Open in app
-            </a>
+              Open Event in App
+            </Link>
           </div>
         </div>
 

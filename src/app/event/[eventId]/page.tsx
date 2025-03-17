@@ -8,6 +8,8 @@ import classNames from "classnames";
 import classes from "./event.module.css";
 import QRCode from "qrcode";
 import { useEffect, useState } from "react";
+import { redirectToAppOrStore, downloadApp } from "@/utils/redirectHandler";
+import Link from "next/link";
 
 const SHARE_DOMAIN = process.env.NEXT_PUBLIC_SHARE_DOMAIN ?? "";
 
@@ -33,7 +35,7 @@ export default function EventPage() {
 
   useEffect(() => {
     if (event?.name) {
-      document.title = `Event - ${event.name}`; 
+      document.title = `Event - ${event.name}`;
     }
   }, [event]);
   if (!event || loading) return <Loading />;
@@ -98,37 +100,43 @@ export default function EventPage() {
             </div>
           </div>
         </div>
-
         <div className="justify-content-sm-center mt-2">
           <div className="col-12 mt-sm-0 mb-1">
             {event?.waitlist_count > 0 ? (
-              <a
+              <Link
                 className={classNames(
                   "btn btn-dark download-link",
                   classes.menu_btn
                 )}
-                id="buyTicket"
                 href="#"
+                onClick={(event) => {
+                  event.preventDefault();
+                  downloadApp(event);
+                }}
               >
                 Download the app to join the waitlist
-              </a>
+              </Link>
             ) : (
-              <a
+              <Link
                 className={classNames("btn btn-dark", classes.menu_btn)}
                 id="buyTicket"
                 href={`${eventId}/buy`}
               >
                 Buy tickets online!
-              </a>
+              </Link>
             )}
           </div>
           <div className="col-12 mt-2 mt-sm-0">
-            <a
-              className={classNames("btn btn-dark", classes.menu_btn)}
+            <Link
+              className={classNames("btn btn-dark open-link", classes.menu_btn)}
               href={`cliq://events/${eventId}`}
+              onClick={(event) => {
+                event.preventDefault();
+                redirectToAppOrStore(event);
+              }}
             >
-              Open in app
-            </a>
+              Open Event in App
+            </Link>
           </div>
         </div>
 
