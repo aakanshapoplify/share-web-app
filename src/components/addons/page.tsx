@@ -31,7 +31,7 @@ interface Props {
   paymentObject:any;
   addonsData: AddonsProps[];
   handleAddons: (data: any[], type: string,apiUpdate:boolean) => void;
-  processToNext: (type: string) => void;
+  processToNext: () => void;
   apiCall:boolean;
   apiLoader:boolean;
 }
@@ -227,8 +227,7 @@ const Addons = ({ addonsData, handleAddons, processToNext,paymentObject, apiCall
     }
   
     if (!hasMoreTextResponses && !hasMoreMultiSelects && isTextResponseValid && isMultiSelectValid) {
-      console.log("nextProcess");
-      processToNext("nextProcess");
+      processToNext();
     }
   }
   };
@@ -381,6 +380,10 @@ const Addons = ({ addonsData, handleAddons, processToNext,paymentObject, apiCall
                   type="button"
                   className={classNames(classes.menu_btn, "btn", "btn-dark")}
                   onClick={handleProceed}
+                  disabled={apiLoader}
+                  style={{
+                    opacity: apiLoader ? 0.5 : 1,
+                  }}
                 >
                   Proceed to Next Step
                 </button>

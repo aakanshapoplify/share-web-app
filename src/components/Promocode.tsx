@@ -18,7 +18,6 @@ const PromCode = ({
 }: Props) => {
   const [promocode, setPromocode] = useState(promo_code?.value ?? "");
   const [apiUpdate, setApiUpdate] = useState(apiCall);
-
   useEffect(() => {
     setPromocode(promo_code?.value ?? "");
   }, [promo_code]);
@@ -78,6 +77,10 @@ const PromCode = ({
                 type="button"
                 className={classNames(classes.btn_apply, "btn", "btn-dark")}
                 onClick={(e) => handleSubmit(e, "remove")}
+                disabled={isDisable}
+                style={{
+                  opacity: isDisable ? 0.5 : 1,
+                }}
               >
                 Remove
               </button>

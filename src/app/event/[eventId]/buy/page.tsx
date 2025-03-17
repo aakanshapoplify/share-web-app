@@ -23,6 +23,7 @@ import PaymentSucceed from "@/components/Succeed/page";
 import CheckoutForm from "@/components/CheckoutForm";
 import { Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
+import { escape } from "querystring";
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY as string
@@ -56,6 +57,8 @@ export default function EventDetail() {
   const [apiCall,setApiCall]= useState(false);
 const [btnStatus,setBtnStatus]= useState(true);
   const [payment, setPayment] = useState<any>();
+  const [addonBtnStatus,setAddonBtnStatus]= useState(false);
+
 
   const { data: eventData, loading: eventLoading } = useQuery(GET_EVENT, {
     variables: { event_id: eventId },
@@ -122,13 +125,12 @@ const [btnStatus,setBtnStatus]= useState(true);
 
   const handleData = (data: any, type: string, apiStatus: boolean) => {  
     setType(type);
-    
     if (type === "ticket") {
       setSelectedTicketData(data); 
     } else if (type === "promocode") {
-      setPromocode(data);
+      (setPromocode(data),setBtnStatus(true))
     } else if (type === "addons") {
-      setAddonsData(data);
+      (setAddonsData(data),setAddonBtnStatus(true))
     }
   
     setApiCall(apiStatus); 
@@ -137,8 +139,13 @@ const [btnStatus,setBtnStatus]= useState(true);
 
   useEffect(() => {
     if (selectedTicketData?.length > 0) {
-      handleOnSave();
+      if(AddonsData?.length <= 0 && type == "addons"){
+        handleToNextStep()
+      }else{
+        handleOnSave();
+      }
     }
+
   }, [JSON.stringify(selectedTicketData), promocode, AddonsData]);
 
   const handleOnSave = async () => {
@@ -159,6 +166,7 @@ const [btnStatus,setBtnStatus]= useState(true);
       });
       if (response?.data?.selectTicketsStep2) {
         setBtnStatus(false)
+        setAddonBtnStatus(false)
         setData(response?.data?.selectTicketsStep2);
         let ticketRes = response?.data?.selectTicketsStep2?.tickets;
         let paymentObject = {
@@ -176,7 +184,7 @@ const [btnStatus,setBtnStatus]= useState(true);
         const errorMessage =
           response?.errors?.[0]?.message || "Something went wrong!";
         toast.error(errorMessage);
-        selectedTicketData?.length > 0 ? setBtnStatus(false) :  toast.error( "Please select ticket to processed");
+        selectedTicketData?.length > 0 ? (setBtnStatus(false), setAddonBtnStatus(false)) :  toast.error( "Please select ticket to processed");
       }
     } catch (err) {
       setIsLoading(false);
@@ -208,8 +216,7 @@ const [btnStatus,setBtnStatus]= useState(true);
     );
   };
 
-  const handleToNextStep = (type: string) => {
-    console.log(type,"type")
+  const handleToNextStep = () => {
     paymentSetup();
   };
 
@@ -238,7 +245,7 @@ const [btnStatus,setBtnStatus]= useState(true);
         },
         tickets: selectedTicketData,
         promo_code: promocode,
-        addons: AddonsData,
+        addons: AddonsData?AddonsData:[],
       };
 
       const response = await setupPayment({
@@ -278,7 +285,6 @@ const [btnStatus,setBtnStatus]= useState(true);
       const response = await paymentSuccess({
         variables: { selectedTicketInput },
       });
-      console.log(response,"response")
       redirectToSuccessPage();
     } catch (err) {
       // setProceed(false);
@@ -403,7 +409,7 @@ const [btnStatus,setBtnStatus]= useState(true);
               isDisable={isLoading}
             />
             <PromCode
-              isDisable={selectedTicketData.length == 0 ? true : isLoading}
+              isDisable={selectedTicketData.length == 0 ? true : btnStatus}
               promo_code={data?.promo_code}
               handlePromocode={handleData}
               apiCall={apiCall}
@@ -468,7 +474,7 @@ const [btnStatus,setBtnStatus]= useState(true);
               handleAddons={handleData}
               paymentObject={payment}
               apiCall={apiCall}
-              apiLoader={btnStatus}
+              apiLoader={addonBtnStatus}
             />
           </>
         )}

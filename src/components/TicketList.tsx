@@ -35,7 +35,6 @@ const TicketList = ({ tickets, event, handleTickets, isDisable,apiCall }: Props)
   },[tickets])
    
   const updateTicketCount = (ticketId: string, change: number) => {
-    console.log(isDisable, "updateTicketCount", apiCall);
     setApiUpdate(true);
   
     setTicketListing((prevTickets) =>
@@ -68,9 +67,7 @@ const TicketList = ({ tickets, event, handleTickets, isDisable,apiCall }: Props)
       .map(({ ticket_id, selected }) => ({
         ticket_id,
         selected,
-      }));
-      console.log(selectedData,"selectedData","apiUpdate",apiUpdate)
-  
+      }));  
     handleTickets(selectedData, "ticket", apiUpdate);
   }, [ticketListing]);
   
