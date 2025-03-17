@@ -59,9 +59,10 @@ a {
 }
 @media only screen and  (min-width: 340px)  and (max-width: 540px) {
   .body_layout{
-    min-width: inherit;
-    max-width: inherit;
+    min-width: 430px;;
+    max-width: 430px;;
 }
+/* width: 345px; */
 }
 small {
   font-size: 0.8rem;

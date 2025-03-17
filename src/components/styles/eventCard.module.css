@@ -186,3 +186,8 @@ margin-top: 10%;
   justify-content: center;
   align-self: center;
 }
+@media only screen and  (min-width: 340px)  and (max-width: 540px) {
+  .menu_btn{
+    width: 345px;;
+}
+}
