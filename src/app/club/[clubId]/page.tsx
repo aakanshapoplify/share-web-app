@@ -34,10 +34,19 @@ export default function ClubPage() {
     }
   }, [clubId]);
 
+
+
   const organizerDetails = clubData?.clubHomePageDetails?.organiser;
   const club = data?.clubBasicDetails;
   const isDescriptionLong = club?.description?.length > 200;
 
+
+  useEffect(() => {
+    if (club?.name) {
+      document.title = `Club - ${club.name}`; 
+    }
+  }, [club]);
+  
   if (loading || clubLoading) return <Loading />;
 
   return (

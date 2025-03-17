@@ -30,6 +30,12 @@ export default function EventPage() {
 
   // Check if event data is available
   const event = data?.eventDetail;
+
+  useEffect(() => {
+    if (event?.name) {
+      document.title = `Event - ${event.name}`; 
+    }
+  }, [event]);
   if (!event || loading) return <Loading />;
 
   // Function to check if description is longer than two lines

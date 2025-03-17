@@ -43,7 +43,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="CLIQ (Preview)" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <link rel="apple-touch-icon" href="/app-icon.png" />
-        <title>Share Event</title>
+        <title>Share page</title>
       </head>
       <body>
         <div id="root" className="main">
