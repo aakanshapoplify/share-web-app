@@ -36,8 +36,6 @@ export default function ClubPage() {
 
   const organizerDetails = clubData?.clubHomePageDetails?.organiser;
   const club = data?.clubBasicDetails;
-  if (!club) return <div>No Club Found</div>;
-
   const isDescriptionLong = club?.description?.length > 200;
 
   if (loading || clubLoading) return <Loading />;
