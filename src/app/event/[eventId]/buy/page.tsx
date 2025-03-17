@@ -42,7 +42,7 @@ export default function EventDetail() {
   const [isLoading, setIsLoading] = useState(false);
   const [promocode, setPromocode] = useState("");
   const [data, setData] = useState<any>();
-  const [processed, setProceed] = useState(true);
+  // const [processed, setProceed] = useState(true);
   const [selectedTicketTerms, setSelectedTicketTerms] = useState<string[]>([]);
   const [acceptedTerms, setAcceptedTerms] = useState<string[]>([]);
   const [type, setType] = useState("");
@@ -53,7 +53,8 @@ export default function EventDetail() {
   const [Succeed, setSucceed] = useState(false);
   const [stripProceed, setStripProceed] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
+  const [apiCall,setApiCall]= useState(false);
+const [btnStatus,setBtnStatus]= useState(true);
   const [payment, setPayment] = useState<any>();
 
   const { data: eventData, loading: eventLoading } = useQuery(GET_EVENT, {
@@ -117,16 +118,22 @@ export default function EventDetail() {
     }
     setShowTickets(true);
   };
-  const handleData = async (data: any, type: string) => {
+
+
+  const handleData = (data: any, type: string, apiStatus: boolean) => {  
     setType(type);
-    type === "ticket"
-      ? setSelectedTicketData(data)
-      : type === "promocode"
-      ? setPromocode(data)
-      : type === "addons"
-      ? setAddonsData(data)
-      : "";
+    
+    if (type === "ticket") {
+      setSelectedTicketData(data); 
+    } else if (type === "promocode") {
+      setPromocode(data);
+    } else if (type === "addons") {
+      setAddonsData(data);
+    }
+  
+    setApiCall(apiStatus); 
   };
+  
 
   useEffect(() => {
     if (selectedTicketData?.length > 0) {
@@ -135,7 +142,6 @@ export default function EventDetail() {
   }, [JSON.stringify(selectedTicketData), promocode, AddonsData]);
 
   const handleOnSave = async () => {
-    setIsLoading(true);
     try {
       let selectedTicketInput = {
         event_id: event?.event_id,
@@ -152,7 +158,7 @@ export default function EventDetail() {
         variables: { selectedTicketInput },
       });
       if (response?.data?.selectTicketsStep2) {
-        setProceed(false);
+        setBtnStatus(false)
         setData(response?.data?.selectTicketsStep2);
         let ticketRes = response?.data?.selectTicketsStep2?.tickets;
         let paymentObject = {
@@ -161,31 +167,29 @@ export default function EventDetail() {
           booking_fee: response?.data?.selectTicketsStep2.booking_fee,
         };
         setPayment(paymentObject);
-        type == "promocode" ? showMessage() : "";
+        type == "promocode" ? showMessage(response?.data?.selectTicketsStep2?.promo_code) : "";
         setAllTicketData(ticketRes);
         await getSelectedTerms(ticketRes);
         setIsLoading(false);
       } else {
-        setProceed(false);
         setIsLoading(false);
-        // Handle GraphQL API errors
         const errorMessage =
           response?.errors?.[0]?.message || "Something went wrong!";
-        console.error("GraphQL Error:", errorMessage);
         toast.error(errorMessage);
+        selectedTicketData?.length > 0 ? setBtnStatus(false) :  toast.error( "Please select ticket to processed");
       }
     } catch (err) {
       setIsLoading(false);
-      setProceed(false);
-      console.error("Failed to fetch data:", err);
     }
   };
-  const showMessage = () => {
-    if (data?.promo_code?.value == null || data?.promo_code?.value == "") {
-      toast.error(data?.promo_code?.message);
+  const showMessage = (data:any) => {
+    if (data?.value) {
+      toast.success(data?.message);
+    }
+    else{
+      toast.error(data?.message? data?.message : "Promocode removed");
       return;
     }
-    toast.success(data?.promo_code?.message);
   };
   const getSelectedTerms = (ticketRes: any) => {
     const matchedTerms = selectedTicketData
@@ -205,6 +209,7 @@ export default function EventDetail() {
   };
 
   const handleToNextStep = (type: string) => {
+    console.log(type,"type")
     paymentSetup();
   };
 
@@ -215,15 +220,14 @@ export default function EventDetail() {
     }
     if (data?.addons?.length > 0) {
       setShowTickets(false);
+      setBtnStatus(true)
       setShowTicketsAddons(true);
     } else {
       paymentSetup();
     }
-    // Proceed to the next step...
   };
 
   const paymentSetup = async () => {
-    setIsLoading(true);
     try {
       let selectedTicketInput = {
         event_id: event?.event_id,
@@ -252,15 +256,12 @@ export default function EventDetail() {
         paymentProcess("");
       }
     } catch (err) {
-      console.error("Failed to fetch data:", err);
       setStripProceed(false);
     } finally {
-      setIsLoading(false);
-    } 
+    }
   };
 
   const paymentProcess = async (paymentIntentId: any) => {
-    setIsLoading(true);
     try {
       let selectedTicketInput = {
         event_id: event?.event_id,
@@ -277,22 +278,23 @@ export default function EventDetail() {
       const response = await paymentSuccess({
         variables: { selectedTicketInput },
       });
+      console.log(response,"response")
       redirectToSuccessPage();
     } catch (err) {
-      setIsLoading(false);
-      setProceed(false);
+      // setProceed(false);
       console.error("Failed to fetch data:", err);
     }
   };
   const paymentSubmit = (paymentIntentId: string) => {
     paymentProcess(paymentIntentId);
+
   };
 
   const redirectToSuccessPage = () => {
     setSucceed(true);
     setShowTicketsAddons(false);
     setShowTickets(false);
-    setStripProceed(false)
+    setStripProceed(false);
   };
 
   if (eventLoading || ticketLoading) return <Loading />;
@@ -397,12 +399,14 @@ export default function EventDetail() {
               tickets={allTicketData}
               event={event}
               handleTickets={handleData}
+              apiCall={apiCall}
               isDisable={isLoading}
             />
             <PromCode
-              isDisable={selectedTicketData.length === 0 || isLoading}
+              isDisable={selectedTicketData.length == 0 ? true : isLoading}
               promo_code={data?.promo_code}
               handlePromocode={handleData}
+              apiCall={apiCall}
             />
             <div className="col-12 mt-2 mt-sm-0">
               {selectedTicketTerms.length > 0 && (
@@ -446,9 +450,9 @@ export default function EventDetail() {
                   "btn btn-dark mt-3 ms-2",
                   classes.menu_btn
                 )}
-                disabled={processed}
+                disabled={btnStatus}
                 style={{
-                  opacity: processed ? 0.5 : 1,
+                  opacity: btnStatus ? 0.5 : 1,
                 }}
               >
                 Proceed to next step
@@ -456,17 +460,19 @@ export default function EventDetail() {
             </div>
           </>
         )}
-        {showTicketsAddons && !showTickets && !stripProceed && (
+        {showTicketsAddons && !showTickets && (
           <>
             <Addons
               addonsData={data.addons}
               processToNext={handleToNextStep}
               handleAddons={handleData}
               paymentObject={payment}
+              apiCall={apiCall}
+              apiLoader={btnStatus}
             />
           </>
         )}
-        {!showTicketsAddons && !showTickets && Succeed && !stripProceed && (
+        {!showTicketsAddons && !showTickets && Succeed  && (
           <>
             <PaymentSucceed />
           </>

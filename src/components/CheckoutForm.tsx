@@ -77,10 +77,10 @@ const CheckoutForm = ({
       </div>
       <form
         onSubmit={handleSubmit}
-        className="p-6 bg-white rounded-lg shadow-lg w-96"
+        className={classNames("p-6 bg-white rounded-lg shadow-lg w-96",classes.form_layout)}
       >
         <h2 className={classes.event_name}>Enter Card Details</h2>
-        <div className="mb-4">
+        <div className={classNames("mb-4",classes.card_element)}>
           <CardElement
             options={{
               style: {
@@ -89,19 +89,25 @@ const CheckoutForm = ({
               },
             }}
           />
+           </div>
+       
+        <div className={classes.btn_div}>
+        <button
+                className={classNames(
+                  "btn btn-dark mt-5 ms-2",
+                  classes.menu_btn
+                )}
+                disabled={isProcessing}
+                style={{
+                  opacity: isProcessing ? 0.5 : 1,
+                }}
+                type="submit"
+
+              >
+                {isProcessing ? "Processing..." : "Submit"}
+              </button>
         </div>
-        <div className="col-md-12">
-          <button
-            type="submit"
-            disabled={isProcessing}
-            className={classNames(
-              classes.submitBtn,
-              "disabled:bg-gray-400 py-2 px-4"
-            )}
-          >
-            {isProcessing ? "Processing..." : "Submit"}
-          </button>
-        </div>
+       
       </form>
     </Modal>
   );

@@ -30,11 +30,13 @@ interface props {
 interface Props {
   paymentObject:any;
   addonsData: AddonsProps[];
-  handleAddons: (data: any[], type: string) => void;
+  handleAddons: (data: any[], type: string,apiUpdate:boolean) => void;
   processToNext: (type: string) => void;
+  apiCall:boolean;
+  apiLoader:boolean;
 }
 
-const Addons = ({ addonsData, handleAddons, processToNext,paymentObject }: Props) => {
+const Addons = ({ addonsData, handleAddons, processToNext,paymentObject, apiCall,apiLoader}: Props) => {
   const [addons, setAddons] = useState<AddonsProps[]>([]);
   const [selectedOptions, setSelectedOptions] = useState<Options[]>([]);
   const [textResponses, setTextResponses] = useState<{ [key: string]: string }>(
@@ -42,6 +44,7 @@ const Addons = ({ addonsData, handleAddons, processToNext,paymentObject }: Props
   );
   const [currentFieldIndex, setCurrentFieldIndex] = useState(0);
   const [updatedAddons, setUpdatedAddons] = useState<any[]>([]);
+  const [apiUpdate,setApiUpdate]= useState(apiCall);
 
   useEffect(() => {
     if (!addonsData || addonsData.length === 0) return;
@@ -139,7 +142,8 @@ const Addons = ({ addonsData, handleAddons, processToNext,paymentObject }: Props
 
   useEffect(() => {
     if (updatedAddons.length > 0) {
-      handleAddons(updatedAddons, "addons");
+      setApiUpdate(true)
+      handleAddons(updatedAddons, "addons",apiUpdate);
     }
   }, [updatedAddons]);
 
@@ -156,9 +160,11 @@ const Addons = ({ addonsData, handleAddons, processToNext,paymentObject }: Props
   const handleProceed = async () => {
     let errorMessages: string[] = [];
     const currentFieldType = addons[currentFieldIndex]?.field_type;
-
+  
     let requestData: any[] = [];
-
+    let isTextResponseValid = true;
+    let isMultiSelectValid = true;
+  
     if (currentFieldType === "TEXT_RESPONSE") {
       requestData = addons
         .filter((addon) => addon.field_type === "TEXT_RESPONSE")
@@ -166,6 +172,7 @@ const Addons = ({ addonsData, handleAddons, processToNext,paymentObject }: Props
           const value = textResponses[addon.event_addon_id] || "";
           if (addon.mandatory && !value.trim()) {
             errorMessages.push(`- ${addon.question} is required`);
+            isTextResponseValid = false;
           }
           return {
             event_addon_id: addon.event_addon_id,
@@ -174,9 +181,8 @@ const Addons = ({ addonsData, handleAddons, processToNext,paymentObject }: Props
           };
         });
     }
-
+  
     if (currentFieldType === "MULTI_SELECT") {
-      processToNext("netProcess");
       addons
         .filter((addon) => addon.field_type === "MULTI_SELECT")
         .forEach((addon) => {
@@ -190,31 +196,43 @@ const Addons = ({ addonsData, handleAddons, processToNext,paymentObject }: Props
               addon_option_id: option.addon_option_id,
               selected: option.selected,
             }));
-
+  
           if (
             addon.mandatory &&
             selectedOptionsList.every((opt) => opt.selected === 0)
           ) {
             errorMessages.push(
-              `- Please select at least one option for ${addon.question}`
+              `Please select at least one option for ${addon.question}`
             );
+            isMultiSelectValid = false;
           }
         });
     }
-
+  
     if (errorMessages.length > 0) {
       toast.error(errorMessages.join("\n"));
       return;
+    }else{
+  
+    if (isTextResponseValid && currentFieldType === "TEXT_RESPONSE") {
+      setApiUpdate(true);
+      await handleAddons(requestData, "addons", apiUpdate);
     }
-
-    if (currentFieldType === "TEXT_RESPONSE") {
-      await handleAddons(requestData, "addons");
-    }
-
+  
+    const hasMoreTextResponses = addons.slice(currentFieldIndex + 1).some(addon => addon.field_type === "TEXT_RESPONSE");
+    const hasMoreMultiSelects = addons.slice(currentFieldIndex + 1).some(addon => addon.field_type === "MULTI_SELECT");
+  
     if (currentFieldIndex < addons.length - 1) {
       setCurrentFieldIndex((prev) => prev + 1);
     }
+  
+    if (!hasMoreTextResponses && !hasMoreMultiSelects && isTextResponseValid && isMultiSelectValid) {
+      console.log("nextProcess");
+      processToNext("nextProcess");
+    }
+  }
   };
+  
 
   return (
     <div

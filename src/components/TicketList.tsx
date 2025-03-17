@@ -20,19 +20,24 @@ interface Props {
   tickets: Ticket[];
   event: Event;
   isDisable: boolean;
-  handleTickets: (data: any[],type:string) => void;
+  handleTickets: (data: any[],type:string,apiUpdate:boolean) => void;
+  apiCall:boolean
 }
 
-const TicketList = ({ tickets, event, handleTickets, isDisable }: Props) => {
+const TicketList = ({ tickets, event, handleTickets, isDisable,apiCall }: Props) => {
   const [ticketListing, setTicketListing] = useState<Ticket[]>(tickets);
   const [eventRecord, setEventRecord] = useState<Event>(event);
   const isFirstRender = useRef(true);
+  const [apiUpdate,setApiUpdate]= useState(apiCall);
 
   useEffect(()=>{
     setTicketListing(tickets)
   },[tickets])
    
   const updateTicketCount = (ticketId: string, change: number) => {
+    console.log(isDisable, "updateTicketCount", apiCall);
+    setApiUpdate(true);
+  
     setTicketListing((prevTickets) =>
       prevTickets?.map((ticket) =>
         ticket.ticket_id === ticketId
@@ -40,20 +45,36 @@ const TicketList = ({ tickets, event, handleTickets, isDisable }: Props) => {
           : ticket
       )
     );
+  
+    if (change < 0) {
+      const updatedTickets = ticketListing
+        ?.map(({ ticket_id, selected }) => ({
+          ticket_id,
+          selected,
+        }))
+        .filter((ticket) => ticket.selected > 0); 
+  
+      handleTickets(updatedTickets, "ticket", true);
+    }
   };
-
+  
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
       return;
     }
-
-    const selectedData = ticketListing?.map(({ ticket_id, selected }) => ({
-      ticket_id,
-      selected,
-    }));
-    handleTickets(selectedData, "ticket"); 
+    const selectedData = ticketListing
+      ?.filter((ticket) => ticket.selected > 0)
+      .map(({ ticket_id, selected }) => ({
+        ticket_id,
+        selected,
+      }));
+      console.log(selectedData,"selectedData","apiUpdate",apiUpdate)
+  
+    handleTickets(selectedData, "ticket", apiUpdate);
   }, [ticketListing]);
+  
+  
 
 
   return (
